@@ -1,0 +1,8 @@
+{
+  "name": "Copy of Versao 1.3 ABFIT - FUNCIONANDO",
+  "description": "Assessoria de Treinamento Físico por André Brito.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
