@@ -315,6 +315,23 @@
         </main>
     </div>
 
+    <!-- PWA Install Banner -->
+    <div id="pwa-install-banner" class="fixed bottom-0 left-0 right-0 z-[100] bg-gray-900 border-t border-gray-700 p-4 shadow-2xl transform translate-y-full transition-transform duration-300 hidden">
+        <div class="flex items-center justify-between max-w-lg mx-auto">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center text-white font-black italic">AB</div>
+                <div>
+                    <h4 class="text-white font-bold text-sm">Instalar ABFIT</h4>
+                    <p class="text-gray-400 text-xs">Acesse offline e mais rápido.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="pwa-close-btn" class="text-gray-400 hover:text-white p-2"><i data-feather="x"></i></button>
+                <button id="pwa-install-btn" class="bg-white text-gray-900 font-bold px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition">Instalar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODALS -->
     <!-- Exercise Detail Modal -->
     <div id="exerciseDetailModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 hidden backdrop-blur-sm transition-opacity">
