@@ -22,6 +22,10 @@ let trackingDistance = 0; // meters
 let isTrackingPaused = false;
 let currentActivityType = "";
 
+// Config Vars
+let currentConfigExerciseIdx = null;
+let currentConfigWorkoutType = null;
+
 let currentCalendarDate = new Date(); // Track calendar state
 
 // --- FINISH WORKOUT STATE ---
@@ -246,42 +250,30 @@ function initializeDatabase() {
             if (!db.trainingPlans.treinosA[email]) db.trainingPlans.treinosA[email] = treinosA;
             if (!db.trainingPlans.treinosB[email]) db.trainingPlans.treinosB[email] = treinosB;
             
-            // --- WORKOUT HISTORY INJECTION (User's specific request) ---
             const now = new Date();
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const currentDay = today.getDay(); // 0 (Sun) to 6 (Sat)
-            
-            // Calculate Tuesday of this week
-            // If today is Sunday(0), Tuesday is +2. If today is Wed(3), Tuesday is -1.
-            // Logic: Go back to Sunday (today - currentDay), then add 2.
-            // If today is Sunday, we assume "this week" started last Monday? Or today? 
-            // Usually "Last Tuesday" means the immediate past one.
-            // The prompt says "I concluded Workout B last Tuesday... and yesterday Workout A".
-            // Let's assume standard "this week" logic starting Monday.
+            const currentDay = today.getDay(); 
             
             const daysToSubtractForTuesday = (currentDay < 2) ? (currentDay + 5) : (currentDay - 2);
             const tuesdayDate = new Date(today);
             tuesdayDate.setDate(today.getDate() - daysToSubtractForTuesday);
             const tuesdayStr = tuesdayDate.toISOString().split('T')[0];
 
-            // Calculate Yesterday
             const yesterdayDate = new Date(today);
             yesterdayDate.setDate(today.getDate() - 1);
             const yesterdayStr = yesterdayDate.toISOString().split('T')[0];
 
+            // Mock volumes for demonstration of progress
             const historyData = [
-                { date: tuesdayStr, type: 'Treino B', duration: '50 min', timestamp: tuesdayDate.toISOString() },
-                { date: yesterdayStr, type: 'Treino A', duration: '40 min', timestamp: yesterdayDate.toISOString() }
+                { date: tuesdayStr, type: 'Treino B', duration: '50 min', timestamp: tuesdayDate.toISOString(), totalVolumeKg: 8500 },
+                { date: yesterdayStr, type: 'Treino A', duration: '40 min', timestamp: yesterdayDate.toISOString(), totalVolumeKg: 7200 }
             ];
 
             if (!db.completedWorkouts[email]) db.completedWorkouts[email] = [];
             historyData.forEach(item => {
-                // Check if this specific workout (type + date) already exists to avoid duplicates on reload
                 const exists = db.completedWorkouts[email].some((w) => w.date === item.date && w.type === item.type);
                 if (!exists) {
                     db.completedWorkouts[email].push(item);
-                    
-                    // Also mark check-ins in the plan so the circles turn green/blue
                     const planKey = item.type === 'Treino A' ? 'treinosA' : 'treinosB';
                     const plan = db.trainingPlans[planKey][email];
                     if(plan) {
@@ -437,6 +429,16 @@ window.openHistoryDetail = (timestamp) => {
         const noImgEl = document.getElementById('history-modal-no-img');
         if (item.photo) { imgEl.src = item.photo; imgEl.classList.remove('hidden'); noImgEl?.classList.add('hidden'); }
         else { imgEl.classList.add('hidden'); noImgEl?.classList.remove('hidden'); }
+        
+        const volBox = document.getElementById('history-modal-volume-box');
+        if (item.totalVolumeKg) {
+            document.getElementById('history-modal-volume-kg').textContent = item.totalVolumeKg.toLocaleString('pt-BR') + ' kg';
+            document.getElementById('history-modal-volume-n').textContent = (item.totalVolumeKg * GRAVITY).toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + ' N';
+            volBox.classList.remove('hidden');
+        } else {
+            volBox.classList.add('hidden');
+        }
+
         document.getElementById('workoutResultModal')?.classList.remove('hidden');
         if (typeof feather !== 'undefined') feather.replace();
     }
@@ -515,17 +517,88 @@ window.updateCarga = (idx, type, val) => {
     window.loadTrainingScreen(type); 
 };
 
+// --- MACHINE CONFIG LOGIC ---
+window.openMachineConfig = (idx, type) => {
+    const db = getDatabase();
+    const email = getCurrentUser();
+    if (!email) return;
+    currentConfigExerciseIdx = idx;
+    currentConfigWorkoutType = type;
+    const exercise = db.trainingPlans[`treinos${type}`][email][idx];
+    const config = exercise.machineConfig || { type: 'fixed' };
+    
+    document.getElementById('machine-type').value = config.type;
+    document.getElementById('plate-weight-1').value = config.plateWeight1 || '';
+    document.getElementById('plate-weight-2').value = config.plateWeight2 || '';
+    document.getElementById('plate-threshold').value = config.plateThreshold || '';
+    document.getElementById('total-plates').value = config.totalPlates || '';
+    
+    toggleMachineFields();
+    document.getElementById('machineConfigModal').classList.remove('hidden');
+};
+
+const toggleMachineFields = () => {
+    const type = document.getElementById('machine-type').value;
+    const fields = document.getElementById('machine-plates-config');
+    if (type === 'progressive') fields.classList.remove('hidden');
+    else fields.classList.add('hidden');
+};
+
+document.getElementById('machine-type')?.addEventListener('change', toggleMachineFields);
+
+document.getElementById('machine-config-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const db = getDatabase();
+    const email = getCurrentUser();
+    if (!email || currentConfigExerciseIdx === null) return;
+    
+    const config = {
+        type: document.getElementById('machine-type').value,
+        plateWeight1: parseFloat(document.getElementById('plate-weight-1').value) || 0,
+        plateWeight2: parseFloat(document.getElementById('plate-weight-2').value) || 0,
+        plateThreshold: parseInt(document.getElementById('plate-threshold').value) || 0,
+        totalPlates: parseInt(document.getElementById('total-plates').value) || 0
+    };
+    
+    db.trainingPlans[`treinos${currentConfigWorkoutType}`][email][currentConfigExerciseIdx].machineConfig = config;
+    saveDatabase(db);
+    document.getElementById('machineConfigModal').classList.add('hidden');
+    window.loadTrainingScreen(currentConfigWorkoutType);
+});
+
+document.getElementById('closeMachineConfigBtn')?.addEventListener('click', () => {
+    document.getElementById('machineConfigModal').classList.add('hidden');
+});
+
+// Helper to calc max machine load
+const calculateMachineMax = (config) => {
+    if (!config || config.type === 'fixed') return 0;
+    const w1 = config.plateWeight1;
+    const w2 = config.plateWeight2 || w1;
+    const thresh = config.plateThreshold || config.totalPlates;
+    const total = config.totalPlates;
+    
+    let max = 0;
+    if (total <= thresh) {
+        max = total * w1;
+    } else {
+        max = (thresh * w1) + ((total - thresh) * w2);
+    }
+    return max;
+};
+
 // --- TRAINING SCREEN LOGIC ---
 function loadTrainingScreen(type, email) {
     const userEmail = email || getCurrentUser();
     if (!userEmail) return;
     const db = getDatabase();
     const plan = db.trainingPlans[`treinos${type}`]?.[userEmail] || [];
+    
     const saveBtn = document.getElementById('save-training-btn');
     if (saveBtn) {
         const newBtn = saveBtn.cloneNode(true);
         saveBtn.parentNode?.replaceChild(newBtn, saveBtn);
-        newBtn.addEventListener('click', () => window.openFinishWorkoutModal(type));
+        newBtn.addEventListener('click', () => window.openFinishWorkoutModal(type, { totalVolumeKg: totalVolumeKg }));
     }
     document.getElementById('training-title').textContent = `TREINO ${type}`;
     const navContainer = document.getElementById('workout-nav-bar');
@@ -543,6 +616,23 @@ function loadTrainingScreen(type, email) {
         totalVolumeKg += (c * s * r);
     });
     const totalVolumeN = totalVolumeKg * GRAVITY;
+
+    // --- PROGRESS COMPARISON ---
+    const history = db.completedWorkouts[userEmail] || [];
+    // Find last workout of same type excluding today (roughly)
+    const lastWorkout = history
+        .filter(h => h.type === `Treino ${type}` || h.type === type)
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+
+    let progressHtml = '';
+    if (lastWorkout && lastWorkout.totalVolumeKg) {
+        const lastVol = lastWorkout.totalVolumeKg;
+        const diff = totalVolumeKg - lastVol;
+        const percent = ((diff / lastVol) * 100).toFixed(1);
+        const color = diff >= 0 ? 'text-green-400' : 'text-red-400';
+        const icon = diff >= 0 ? 'trending-up' : 'trending-down';
+        progressHtml = `<div class="text-[10px] font-bold ${color} flex items-center gap-1 bg-gray-800 px-2 py-1 rounded ml-2 border border-gray-700"><i data-feather="${icon}" class="w-3 h-3"></i> ${percent}% vs anterior</div>`;
+    }
 
     const timerEl = document.getElementById('workout-timer');
     if (timerEl) {
@@ -562,9 +652,12 @@ function loadTrainingScreen(type, email) {
     const listContainer = document.getElementById('training-content-wrapper');
     if (listContainer) {
         listContainer.innerHTML = `
-            <div class="volume-tracker-bar">
-                <div class="volume-stat-box"><span class="volume-stat-label">Volume (kg)</span><span class="volume-stat-value">${totalVolumeKg.toLocaleString('pt-BR')} kg</span></div>
-                <div class="volume-stat-box"><span class="volume-stat-label">Volume (N)</span><span class="volume-stat-value">${totalVolumeN.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} N</span></div>
+            <div class="flex flex-col gap-2 mb-2">
+                <div class="volume-tracker-bar">
+                    <div class="volume-stat-box"><span class="volume-stat-label">Volume Total (kg)</span><span class="volume-stat-value text-xl">${totalVolumeKg.toLocaleString('pt-BR')} kg</span></div>
+                    <div class="volume-stat-box border-l border-gray-600 pl-4"><span class="volume-stat-label">Força (N)</span><span class="volume-stat-value text-red-500">${totalVolumeN.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} N</span></div>
+                </div>
+                ${progressHtml ? `<div class="flex justify-center">${progressHtml}</div>` : ''}
             </div>
         `;
         const todayStr = new Date().toISOString().split('T')[0];
@@ -590,7 +683,20 @@ function loadTrainingScreen(type, email) {
                 const bgClass = isDone ? 'bg-green-500 border-green-600 text-white' : 'bg-gray-400/50 border-gray-400 text-gray-700 hover:bg-gray-400';
                 setsHtml += `<div onclick="toggleSet(${i}, '${type}', ${s})" class="w-6 h-6 rounded-full border ${bgClass} flex items-center justify-center font-bold text-xs cursor-pointer shadow-sm transition-all active:scale-95 shrink-0">${s}</div>`;
             }
-            const exVolumeKg = (parseFloat(ex.carga) || 0) * parseNumeric(ex.sets) * parseNumeric(ex.reps);
+            
+            const currentLoad = parseFloat(ex.carga) || 0;
+            const exVolumeKg = currentLoad * totalSets * parseNumeric(ex.reps);
+            
+            // Machine Percent Logic
+            let machineStatHtml = '';
+            if (ex.machineConfig && ex.machineConfig.type === 'progressive') {
+                const maxLoad = calculateMachineMax(ex.machineConfig);
+                if (maxLoad > 0) {
+                    const percent = Math.round((currentLoad / maxLoad) * 100);
+                    machineStatHtml = `<span class="text-[9px] font-bold text-orange-400 bg-gray-900 px-1.5 py-0.5 rounded border border-gray-700">${percent}% da Máq.</span>`;
+                }
+            }
+
             const wrapper = document.createElement('div');
             if (conjugadoId) wrapper.className = 'superset-wrapper';
             wrapper.innerHTML = `
@@ -598,13 +704,24 @@ function loadTrainingScreen(type, email) {
                 <div class="metal-card-exercise flex-col !items-stretch !gap-3 h-auto" onclick="openExerciseModal(${i}, '${type}')">
                     <div class="flex items-start gap-3 relative">
                         <div class="relative shrink-0"><img src="${ex.img}" class="exercise-thumbnail w-16 h-16 object-cover rounded-lg shadow-sm border border-gray-400"><div class="absolute inset-0 flex items-center justify-center"><i data-feather="play-circle" class="text-white w-6 h-6 drop-shadow-md opacity-80"></i></div></div>
-                        <div class="flex-grow min-w-0 pt-0.5"><h3 class="font-black text-gray-900 text-sm leading-tight pr-10 uppercase tracking-tight">${i + 1}. ${cleanName}</h3>${label ? `<p class="text-[10px] font-bold text-red-600 mt-0.5 tracking-wider">${label}</p>` : ''}<p class="text-[10px] font-black text-blue-600 mt-1 uppercase">Volume: ${exVolumeKg.toLocaleString('pt-BR')} kg</p></div>
+                        <div class="flex-grow min-w-0 pt-0.5">
+                            <h3 class="font-black text-gray-900 text-sm leading-tight pr-10 uppercase tracking-tight">${i + 1}. ${cleanName}</h3>
+                            ${label ? `<p class="text-[10px] font-bold text-red-600 mt-0.5 tracking-wider">${label}</p>` : ''}
+                            <div class="flex items-center gap-2 mt-1">
+                                <p class="text-[10px] font-black text-blue-600 uppercase">Vol: ${exVolumeKg.toLocaleString('pt-BR')} kg</p>
+                                ${machineStatHtml}
+                            </div>
+                        </div>
                         <div class="toggle-switch absolute top-0 right-0" onclick="event.stopPropagation()"><label><input type="checkbox" class="exercise-check" data-idx="${i}" ${isChecked ? 'checked' : ''}><span class="slider"></span></label></div>
                     </div>
                     <div class="grid grid-cols-3 gap-2">
                          <div class="bg-gray-300/60 rounded-lg p-1.5 border border-gray-400 flex flex-col justify-between shadow-inner h-20" onclick="event.stopPropagation()"><div class="flex flex-col items-center justify-center border-b border-gray-400/30 pb-1"><span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Séries</span><span class="text-xl font-black text-blue-800 leading-none">${ex.sets}</span></div><div class="flex justify-evenly items-center w-full h-full pt-1 px-0.5 overflow-hidden">${setsHtml}</div></div>
                          <div class="bg-gray-300/60 rounded-lg p-1.5 border border-gray-400 flex flex-col items-center justify-center shadow-inner h-20"><span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Reps</span><span class="text-2xl font-black text-orange-700 leading-none">${ex.reps}</span></div>
-                         <div class="bg-gray-300/60 rounded-lg p-1.5 border border-gray-400 flex flex-col items-center justify-center shadow-inner h-20" onclick="event.stopPropagation()"><span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Carga (kg)</span><input type="number" value="${ex.carga}" onchange="updateCarga(${i}, '${type}', this.value)" class="carga-input" inputmode="numeric"></div>
+                         <div class="bg-gray-300/60 rounded-lg p-1.5 border border-gray-400 flex flex-col items-center justify-center shadow-inner h-20 relative group" onclick="event.stopPropagation()">
+                            <button onclick="event.stopPropagation(); openMachineConfig(${i}, '${type}')" class="absolute top-1 right-1 text-gray-500 hover:text-blue-600"><i class="fas fa-cog text-xs"></i></button>
+                            <span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Carga (kg)</span>
+                            <input type="number" value="${ex.carga}" onchange="updateCarga(${i}, '${type}', this.value)" class="carga-input" inputmode="numeric">
+                         </div>
                     </div>
                 </div>
             `;

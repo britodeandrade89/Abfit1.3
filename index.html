@@ -348,6 +348,49 @@
         </div>
     </div>
 
+    <!-- Machine Config Modal (NEW) -->
+    <div id="machineConfigModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 hidden backdrop-blur-sm p-4">
+        <div class="bg-gray-800 w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-700 relative">
+            <button id="closeMachineConfigBtn" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i data-feather="x"></i></button>
+            <h3 class="text-xl font-black text-white uppercase mb-4 flex items-center gap-2"><i class="fas fa-cogs text-red-500"></i> Config. Máquina</h3>
+            <form id="machine-config-form" class="space-y-4">
+                <div>
+                    <label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">Tipo de Carga</label>
+                    <select id="machine-type" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white text-sm">
+                        <option value="fixed">Peso Livre / Halteres</option>
+                        <option value="progressive">Máquina (Placas)</option>
+                    </select>
+                </div>
+                
+                <div id="machine-plates-config" class="hidden space-y-3 border-t border-gray-700 pt-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">Peso Inicial (kg)</label>
+                            <input type="number" id="plate-weight-1" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white text-sm" placeholder="Ex: 5">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">Até Placa Nº</label>
+                            <input type="number" id="plate-threshold" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white text-sm" placeholder="Ex: 5">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">Peso Secundário (kg)</label>
+                            <input type="number" id="plate-weight-2" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white text-sm" placeholder="Ex: 10">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">Total de Placas</label>
+                            <input type="number" id="total-plates" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white text-sm" placeholder="Ex: 20">
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-gray-500 italic leading-tight">Ex: 5kg até a placa 5, depois 10kg por placa.</p>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl uppercase tracking-wider text-sm mt-2">Salvar Configuração</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Periodization Detail Modal -->
     <div id="periodizationDetailModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 hidden backdrop-blur-sm transition-opacity">
         <div id="periodization-modal-content" class="bg-gray-800 w-11/12 max-w-md rounded-2xl p-6 shadow-2xl transform scale-95 opacity-0 transition-all duration-300 border border-gray-600 relative">
@@ -393,6 +436,16 @@
                 <div class="grid grid-cols-2 gap-4 bg-gray-900/50 p-4 rounded-xl border border-gray-700">
                     <div class="text-center border-r border-gray-700"><p class="text-[10px] text-gray-400 uppercase">Tempo</p><p id="history-modal-duration" class="text-xl font-mono font-bold text-white"></p></div>
                      <div class="text-center hidden" id="history-modal-distance-box"><p class="text-[10px] text-gray-400 uppercase">Distância</p><p id="history-modal-distance" class="text-xl font-mono font-bold text-white"></p></div>
+                </div>
+                <!-- Volume Stat in Modal -->
+                <div id="history-modal-volume-box" class="mt-4 pt-4 border-t border-gray-700 hidden">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-gray-400 font-bold uppercase">Volume Total</span>
+                        <div class="text-right">
+                            <span id="history-modal-volume-kg" class="block text-sm font-bold text-white"></span>
+                            <span id="history-modal-volume-n" class="block text-[10px] font-mono text-gray-500"></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
