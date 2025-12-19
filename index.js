@@ -407,7 +407,7 @@ function renderTrainingHistory(email) {
     const month = currentCalendarDate.getMonth();
     const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
     
-    // ORDENAÇÃO CRESCENTE: Mais antigo (ex: dia 08) em cima, mais novo embaixo.
+    // ORDENAÇÃO CRESCENTE
     const monthlyHistory = history.filter((h) => h.date.startsWith(monthPrefix))
                                   .sort((a, b) => new Date(a.timestamp || a.date).getTime() - new Date(b.timestamp || b.date).getTime());
 
@@ -581,7 +581,6 @@ document.getElementById('closeMachineConfigBtn')?.addEventListener('click', () =
     document.getElementById('machineConfigModal').classList.add('hidden');
 });
 
-// Helper to calc max machine load
 const calculateMachineMax = (config) => {
     if (!config || config.type === 'fixed') return 0;
     const w1 = config.plateWeight1;
@@ -628,7 +627,6 @@ function loadTrainingScreen(type, email) {
     });
     const totalVolumeN = totalVolumeKg * GRAVITY;
 
-    // --- PROGRESS COMPARISON ---
     const history = db.completedWorkouts[userEmail] || [];
     const lastWorkout = history
         .filter(h => h.type === `Treino ${type}` || h.type === type)
@@ -857,7 +855,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('prev-month-btn')?.addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1); renderCalendar(currentCalendarDate); });
     document.getElementById('next-month-btn')?.addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1); renderCalendar(currentCalendarDate); });
 
-    // --- PWA INSTALL LOGIC (Enhanced for iOS & Android) ---
+    // --- PWA INSTALL LOGIC ---
     const pwaBanner = document.getElementById('pwa-install-banner');
     const installBtn = document.getElementById('pwa-install-btn');
     const pwaText = pwaBanner.querySelector('h4');
@@ -870,7 +868,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const showInstallBanner = () => {
         if (isStandalone) return; 
         pwaBanner.classList.remove('hidden');
-        pwaBanner.style.transform = "translateY(0)";
+        pwaBanner.style.transform = "translateY(0)"; // Force visibility
         if (isIOS) {
             pwaText.textContent = "Instalar no iPhone";
             pwaDesc.innerHTML = "Toque em <i class='fas fa-share-square'></i> e depois em <strong>Adicionar à Tela de Início</strong>.";
@@ -882,7 +880,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    setTimeout(showInstallBanner, 500); // Aparece quase imediatamente no login
+    // Attempt to show banner very quickly
+    setTimeout(showInstallBanner, 100);
 
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
