@@ -250,10 +250,12 @@ function initializeDatabase() {
             if (!db.trainingPlans.treinosA[email]) db.trainingPlans.treinosA[email] = treinosA;
             if (!db.trainingPlans.treinosB[email]) db.trainingPlans.treinosB[email] = treinosB;
             
+            // --- CALCULO DE DATAS ---
             const now = new Date();
+            const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             const currentDay = today.getDay(); 
-            
             const daysToSubtractForTuesday = (currentDay < 2) ? (currentDay + 5) : (currentDay - 2);
             const tuesdayDate = new Date(today);
             tuesdayDate.setDate(today.getDate() - daysToSubtractForTuesday);
@@ -263,13 +265,19 @@ function initializeDatabase() {
             yesterdayDate.setDate(today.getDate() - 1);
             const yesterdayStr = yesterdayDate.toISOString().split('T')[0];
 
-            // Mock volumes for demonstration of progress
+            // --- HISTÓRICO COMPLETO MESCLADO ---
             const historyData = [
+                // Histórico Antigo (Ordem de Data Crescente)
+                { date: `${yearMonth}-08`, type: 'Treino A', duration: '50 min', timestamp: new Date(`${yearMonth}-08T10:00:00`).toISOString(), totalVolumeKg: 6800 },
+                { date: `${yearMonth}-09`, type: 'Treino B', duration: '50 min', timestamp: new Date(`${yearMonth}-09T10:00:00`).toISOString(), totalVolumeKg: 7500 },
+                { date: `${yearMonth}-10`, type: 'Treino A', duration: '37 min', timestamp: new Date(`${yearMonth}-10T10:00:00`).toISOString(), totalVolumeKg: 5200 },
+                // Novos Registros (Terça e Ontem)
                 { date: tuesdayStr, type: 'Treino B', duration: '50 min', timestamp: tuesdayDate.toISOString(), totalVolumeKg: 8500 },
                 { date: yesterdayStr, type: 'Treino A', duration: '40 min', timestamp: yesterdayDate.toISOString(), totalVolumeKg: 7200 }
             ];
 
             if (!db.completedWorkouts[email]) db.completedWorkouts[email] = [];
+            
             historyData.forEach(item => {
                 const exists = db.completedWorkouts[email].some((w) => w.date === item.date && w.type === item.type);
                 if (!exists) {
@@ -388,7 +396,7 @@ function showScreen(screenId) {
     window.scrollTo(0, 0);
 }
 
-// --- RENDER HISTORY LIST ---
+// --- RENDER HISTORY LIST (ASCENDING ORDER) ---
 function renderTrainingHistory(email) {
     const historyContainer = document.getElementById('training-history-container');
     if (!historyContainer) return;
@@ -398,14 +406,17 @@ function renderTrainingHistory(email) {
     const year = currentCalendarDate.getFullYear();
     const month = currentCalendarDate.getMonth();
     const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
-    const monthlyHistory = history.filter((h) => h.date.startsWith(monthPrefix)).sort((a, b) => new Date(b.timestamp || b.date).getTime() - new Date(a.timestamp || a.date).getTime());
+    
+    // ORDENAÇÃO CRESCENTE: Mais antigo (ex: dia 08) em cima, mais novo embaixo.
+    const monthlyHistory = history.filter((h) => h.date.startsWith(monthPrefix))
+                                  .sort((a, b) => new Date(a.timestamp || a.date).getTime() - new Date(b.timestamp || b.date).getTime());
 
     if (monthlyHistory.length === 0) {
         historyContainer.innerHTML = '<p class="text-gray-400 text-center text-sm mt-4">Nenhum histórico neste mês.</p>';
         return;
     }
 
-    let html = '<h3 class="text-lg font-bold text-white mb-3 px-1">Histórico Recente</h3><div class="space-y-2">';
+    let html = '<h3 class="text-lg font-bold text-white mb-3 px-1">Seu Progresso</h3><div class="space-y-2">';
     monthlyHistory.forEach((item) => {
         const dateObj = new Date(item.date + 'T00:00:00');
         const day = String(dateObj.getDate()).padStart(2, '0');
@@ -619,7 +630,6 @@ function loadTrainingScreen(type, email) {
 
     // --- PROGRESS COMPARISON ---
     const history = db.completedWorkouts[userEmail] || [];
-    // Find last workout of same type excluding today (roughly)
     const lastWorkout = history
         .filter(h => h.type === `Treino ${type}` || h.type === type)
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
@@ -687,7 +697,6 @@ function loadTrainingScreen(type, email) {
             const currentLoad = parseFloat(ex.carga) || 0;
             const exVolumeKg = currentLoad * totalSets * parseNumeric(ex.reps);
             
-            // Machine Percent Logic
             let machineStatHtml = '';
             if (ex.machineConfig && ex.machineConfig.type === 'progressive') {
                 const maxLoad = calculateMachineMax(ex.machineConfig);
@@ -830,7 +839,7 @@ function loadStudentProfile(email) {
     showScreen('studentProfileScreen');
 }
 
-async function fetchWeather() { /* Open-Meteo logic same as before */ }
+async function fetchWeather() { /* Open-Meteo logic */ }
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeDatabase();
@@ -855,49 +864,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const pwaDesc = pwaBanner.querySelector('p');
     let deferredPrompt;
 
-    // Detect iOS
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    // Check if already installed (standalone mode)
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator.standalone === true);
 
-    // Show banner logic
     const showInstallBanner = () => {
-        if (isStandalone) return; // Don't show if already installed
-        
+        if (isStandalone) return; 
         pwaBanner.classList.remove('hidden');
-        
+        pwaBanner.style.transform = "translateY(0)";
         if (isIOS) {
-            // iOS Instructions
             pwaText.textContent = "Instalar no iPhone";
             pwaDesc.innerHTML = "Toque em <i class='fas fa-share-square'></i> e depois em <strong>Adicionar à Tela de Início</strong>.";
-            installBtn.style.display = 'none'; // Hide button as we can't trigger it programmatically
+            installBtn.style.display = 'none';
         } else {
-            // Android/Desktop Logic
             pwaText.textContent = "Instalar ABFIT";
             pwaDesc.textContent = "Acesse offline e mais rápido.";
             installBtn.style.display = 'block';
         }
     };
 
-    // Auto-show banner on load (delayed slightly for effect)
-    setTimeout(showInstallBanner, 2000);
+    setTimeout(showInstallBanner, 500); // Aparece quase imediatamente no login
 
-    // Capture Android install prompt
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        showInstallBanner(); // Ensure it shows up if catching the event
+        showInstallBanner();
     });
 
     installBtn?.addEventListener('click', async () => {
         if (deferredPrompt) {
             deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response to the install prompt: ${outcome}`);
+            await deferredPrompt.userChoice;
             deferredPrompt = null;
             pwaBanner.classList.add('hidden');
         } else {
-            // Fallback for desktop browsers that don't support beforeinstallprompt but might support manual install
             alert("Para instalar, procure a opção 'Instalar App' no menu do seu navegador.");
         }
     });
@@ -913,3 +912,4 @@ window.loadRunningScreen = loadRunningScreen;
 window.loadRaceCalendarScreen = loadRaceCalendarScreen;
 window.loadPeriodizationScreen = loadPeriodizationScreen;
 window.loadAIAnalysisScreen = loadAIAnalysisScreen;
+window.openMachineConfig = openMachineConfig;
