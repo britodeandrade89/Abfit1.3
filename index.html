@@ -18,6 +18,10 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <script>
         window.process = { env: { NODE_ENV: 'production' } };
     </script>
@@ -322,7 +326,7 @@
                 <div class="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center text-white font-black italic">AB</div>
                 <div>
                     <h4 class="text-white font-bold text-sm">Instalar ABFIT</h4>
-                    <p class="text-gray-400 text-xs">Acesse offline e mais rápido.</p>
+                    <p id="pwa-description" class="text-gray-400 text-xs">Acesse offline e mais rápido.</p>
                 </div>
             </div>
             <div class="flex items-center gap-2">
@@ -345,49 +349,6 @@
                 <h3 id="modal-exercise-name" class="text-2xl font-black text-white uppercase leading-tight drop-shadow-lg mb-2"></h3>
                 <p class="text-gray-300 text-sm leading-relaxed">Execute com controle.</p>
             </div>
-        </div>
-    </div>
-
-    <!-- Machine Config Modal (NEW) -->
-    <div id="machineConfigModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 hidden backdrop-blur-sm p-4">
-        <div class="bg-gray-800 w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-700 relative">
-            <button id="closeMachineConfigBtn" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i data-feather="x"></i></button>
-            <h3 class="text-xl font-black text-white uppercase mb-4 flex items-center gap-2"><i class="fas fa-cogs text-red-500"></i> Config. Máquina</h3>
-            <form id="machine-config-form" class="space-y-4">
-                <div>
-                    <label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">Tipo de Carga</label>
-                    <select id="machine-type" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white text-sm">
-                        <option value="fixed">Peso Livre / Halteres</option>
-                        <option value="progressive">Máquina (Placas)</option>
-                    </select>
-                </div>
-                
-                <div id="machine-plates-config" class="hidden space-y-3 border-t border-gray-700 pt-3">
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">Peso Inicial (kg)</label>
-                            <input type="number" id="plate-weight-1" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white text-sm" placeholder="Ex: 5">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">Até Placa Nº</label>
-                            <input type="number" id="plate-threshold" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white text-sm" placeholder="Ex: 5">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">Peso Secundário (kg)</label>
-                            <input type="number" id="plate-weight-2" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white text-sm" placeholder="Ex: 10">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-gray-400 font-bold uppercase mb-1">Total de Placas</label>
-                            <input type="number" id="total-plates" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white text-sm" placeholder="Ex: 20">
-                        </div>
-                    </div>
-                    <p class="text-[10px] text-gray-500 italic leading-tight">Ex: 5kg até a placa 5, depois 10kg por placa.</p>
-                </div>
-
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl uppercase tracking-wider text-sm mt-2">Salvar Configuração</button>
-            </form>
         </div>
     </div>
 
@@ -437,16 +398,6 @@
                     <div class="text-center border-r border-gray-700"><p class="text-[10px] text-gray-400 uppercase">Tempo</p><p id="history-modal-duration" class="text-xl font-mono font-bold text-white"></p></div>
                      <div class="text-center hidden" id="history-modal-distance-box"><p class="text-[10px] text-gray-400 uppercase">Distância</p><p id="history-modal-distance" class="text-xl font-mono font-bold text-white"></p></div>
                 </div>
-                <!-- Volume Stat in Modal -->
-                <div id="history-modal-volume-box" class="mt-4 pt-4 border-t border-gray-700 hidden">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-gray-400 font-bold uppercase">Volume Total</span>
-                        <div class="text-right">
-                            <span id="history-modal-volume-kg" class="block text-sm font-bold text-white"></span>
-                            <span id="history-modal-volume-n" class="block text-[10px] font-mono text-gray-500"></span>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -457,34 +408,6 @@
             <button onclick="document.getElementById('infoModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i data-feather="x"></i></button>
             <h3 id="info-modal-title" class="text-xl font-bold text-white mb-4"></h3>
             <div id="info-modal-body" class="text-gray-300 text-sm leading-relaxed space-y-2"></div>
-        </div>
-    </div>
-
-    <!-- ADD ALUNO MODAL (For Physio) -->
-    <div id="modal-add-aluno" class="fixed inset-0 z-[80] flex items-center justify-center bg-black bg-opacity-70 hidden">
-        <div id="modal-content" class="bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6 transform scale-95 opacity-0 transition-all duration-300 border border-gray-700">
-            <h3 class="text-xl font-bold text-white mb-4">Adicionar Novo Aluno</h3>
-            <form id="form-novo-aluno" class="space-y-4">
-                <div>
-                    <label class="block text-gray-400 text-xs font-bold uppercase mb-2">Nome Completo</label>
-                    <input type="text" id="nome-aluno" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none" required>
-                </div>
-                <div>
-                    <label class="block text-gray-400 text-xs font-bold uppercase mb-2">Data de Nascimento</label>
-                    <input type="date" id="nascimento-aluno" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none" required>
-                </div>
-                <div>
-                    <label class="block text-gray-400 text-xs font-bold uppercase mb-2">Sexo</label>
-                    <select id="sexo-aluno" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none" required>
-                        <option value="Masculino">Masculino</option>
-                        <option value="Feminino">Feminino</option>
-                    </select>
-                </div>
-                <div class="flex justify-end space-x-3 mt-6">
-                    <button type="button" id="btn-cancel-modal" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg">Cancelar</button>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">Salvar</button>
-                </div>
-            </form>
         </div>
     </div>
 
