@@ -23,14 +23,15 @@
         window.process = window.process || {};
         window.process.env = window.process.env || {};
         window.process.env.NODE_ENV = 'production';
+        window.isAppLoaded = false;
     </script>
     <link rel="stylesheet" href="index.css">
     
     <script type="importmap">
     {
       "imports": {
-        "@google/genai": "https://esm.run/@google/genai",
-        "@capacitor/cli": "https://esm.run/@capacitor/cli"
+        "@google/genai": "https://cdn.jsdelivr.net/npm/@google/genai/+esm",
+        "@capacitor/cli": "https://cdn.jsdelivr.net/npm/@capacitor/cli/+esm"
       }
     }
     </script>
@@ -39,11 +40,11 @@
 <body class="overscroll-none">
 
     <!-- MAIN APP CONTAINER -->
-    <div id="appContainer" class="h-screen flex flex-col max-w-lg mx-auto relative z-10">
+    <div id="appContainer" class="h-screen flex flex-col max-w-lg mx-auto relative z-10" style="opacity: 1;">
         <main class="flex-grow screens-wrapper">
 
-            <!-- LOGIN SCREEN -->
-            <div id="loginScreen" class="screen hidden">
+            <!-- LOGIN SCREEN (VISIBLE BY DEFAULT NOW) -->
+            <div id="loginScreen" class="screen active">
                 <div class="h-full flex flex-col justify-center items-center p-8 w-full">
                     <div class="text-center mb-10 transform">
                         <div class="logo-wrapper">
@@ -68,7 +69,7 @@
             </div>
 
             <!-- STUDENT PROFILE SCREEN -->
-            <div id="studentProfileScreen" class="screen p-6 hidden">
+            <div id="studentProfileScreen" class="screen hidden p-6">
                 <header class="flex justify-between items-center mb-6 pt-2">
                     <div class="logo-wrapper items-start">
                         <h1 class="logo-main text-4xl">
@@ -139,7 +140,7 @@
             </div>
 
             <!-- PERIODIZATION SCREEN -->
-            <div id="periodizationScreen" class="screen p-6 hidden">
+            <div id="periodizationScreen" class="screen hidden p-6">
                 <div class="flex items-center justify-between mb-6">
                     <button onclick="showScreen('studentProfileScreen')" class="text-gray-400"><i data-feather="arrow-left"></i></button>
                     <h2 class="text-2xl font-black text-white italic">PERIODIZAÇÃO</h2>
@@ -149,7 +150,7 @@
             </div>
 
             <!-- RUNNING SCREEN -->
-            <div id="runningScreen" class="screen p-6 hidden">
+            <div id="runningScreen" class="screen hidden p-6">
                 <div class="flex items-center justify-between mb-6">
                     <button onclick="showScreen('studentProfileScreen')" class="text-gray-400"><i data-feather="arrow-left"></i></button>
                     <h2 class="text-2xl font-black text-white italic">CORRIDA</h2>
@@ -159,7 +160,7 @@
             </div>
 
             <!-- RACE CALENDAR SCREEN -->
-            <div id="raceCalendarScreen" class="screen p-6 hidden">
+            <div id="raceCalendarScreen" class="screen hidden p-6">
                  <div class="flex items-center justify-between mb-6">
                     <button onclick="showScreen('studentProfileScreen')" class="text-gray-400"><i data-feather="arrow-left"></i></button>
                     <h2 class="text-2xl font-black text-white italic">PRÓXIMAS PROVAS</h2>
@@ -169,7 +170,7 @@
             </div>
 
             <!-- OUTDOOR SELECTION SCREEN -->
-            <div id="outdoorSelectionScreen" class="screen p-6 hidden">
+            <div id="outdoorSelectionScreen" class="screen hidden p-6">
                 <div class="flex items-center justify-between mb-8">
                     <button onclick="showScreen('studentProfileScreen')" class="text-gray-400"><i data-feather="arrow-left"></i></button>
                     <h2 class="text-2xl font-black text-white italic">OUTDOOR</h2>
@@ -192,7 +193,7 @@
             </div>
 
             <!-- OUTDOOR TRACKING SCREEN -->
-            <div id="outdoorTrackingScreen" class="screen p-0 flex flex-col h-full hidden">
+            <div id="outdoorTrackingScreen" class="screen hidden p-0 flex flex-col h-full">
                  <div class="bg-gray-900 p-4 border-b border-gray-800 z-20">
                     <div class="flex items-center justify-between mb-4">
                         <button class="outdoor-back-btn text-gray-400" data-target="outdoorSelectionScreen"><i data-feather="arrow-left"></i></button>
@@ -219,7 +220,7 @@
             <div id="aiAnalysisScreen" class="screen hidden"></div>
 
             <!-- PHYSIO ASSESSMENT SCREEN -->
-            <div id="physioAssessmentScreen" class="screen p-0 hidden">
+            <div id="physioAssessmentScreen" class="screen hidden p-0">
                 <div class="bg-gray-900 min-h-full pb-20">
                     <!-- Nav -->
                     <div class="bg-gray-800 px-4 py-3 flex justify-between items-center shadow-md border-b border-gray-700 sticky top-0 z-30">
@@ -452,14 +453,10 @@
                 console.warn('App load timeout - Forcing Login Screen fallback.');
                 const login = document.getElementById('loginScreen');
                 const app = document.getElementById('appContainer');
-                if (login && login.classList.contains('hidden')) {
-                    // Hide all other screens first
-                    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-                    // Show login
+                if (login) {
+                    // Force visibility by removing class hidden if present, and adding active
                     login.classList.remove('hidden');
                     login.classList.add('active');
-                    // Ensure app container is visible
-                    if (app) app.style.opacity = '1';
                 }
             }
         }, 1500);
