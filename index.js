@@ -390,9 +390,20 @@ window.handleChatSubmit = async (e) => {
 // --- NAVIGATION ---
 function showScreen(screenId) {
     const screens = document.querySelectorAll('.screen');
-    screens.forEach(s => { s.classList.remove('active'); s.classList.remove('hidden'); (s).style.display = ''; });
+    // FIXED: Correctly hide all screens first
+    screens.forEach(s => { 
+        s.classList.remove('active'); 
+        s.classList.add('hidden'); // Ensure hidden class is added
+        // Remove direct style manipulations to allow classes to work
+        s.style.display = ''; 
+    });
+    
     const target = document.getElementById(screenId);
-    if (target) { target.classList.add('active'); }
+    if (target) { 
+        target.classList.remove('hidden'); // Unhide target
+        // Small timeout to allow reflow for potential animations
+        setTimeout(() => target.classList.add('active'), 10);
+    }
     window.scrollTo(0, 0);
 }
 

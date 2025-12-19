@@ -43,7 +43,7 @@
         <main class="flex-grow screens-wrapper">
 
             <!-- LOGIN SCREEN -->
-            <div id="loginScreen" class="screen">
+            <div id="loginScreen" class="screen hidden">
                 <div class="h-full flex flex-col justify-center items-center p-8 w-full">
                     <div class="text-center mb-10 transform">
                         <div class="logo-wrapper">
@@ -68,7 +68,7 @@
             </div>
 
             <!-- STUDENT PROFILE SCREEN -->
-            <div id="studentProfileScreen" class="screen p-6">
+            <div id="studentProfileScreen" class="screen p-6 hidden">
                 <header class="flex justify-between items-center mb-6 pt-2">
                     <div class="logo-wrapper items-start">
                         <h1 class="logo-main text-4xl">
@@ -116,7 +116,7 @@
             </div>
 
             <!-- TRAINING SCREEN -->
-            <div id="trainingScreen" class="screen">
+            <div id="trainingScreen" class="screen hidden">
                 <div class="pb-24 p-4">
                     <div class="sticky top-0 bg-black/90 backdrop-blur-md z-20 pb-4 pt-2 mb-4 border-b border-gray-800">
                         <div class="flex items-center justify-between mb-4">
@@ -139,7 +139,7 @@
             </div>
 
             <!-- PERIODIZATION SCREEN -->
-            <div id="periodizationScreen" class="screen p-6">
+            <div id="periodizationScreen" class="screen p-6 hidden">
                 <div class="flex items-center justify-between mb-6">
                     <button onclick="showScreen('studentProfileScreen')" class="text-gray-400"><i data-feather="arrow-left"></i></button>
                     <h2 class="text-2xl font-black text-white italic">PERIODIZAÇÃO</h2>
@@ -149,7 +149,7 @@
             </div>
 
             <!-- RUNNING SCREEN -->
-            <div id="runningScreen" class="screen p-6">
+            <div id="runningScreen" class="screen p-6 hidden">
                 <div class="flex items-center justify-between mb-6">
                     <button onclick="showScreen('studentProfileScreen')" class="text-gray-400"><i data-feather="arrow-left"></i></button>
                     <h2 class="text-2xl font-black text-white italic">CORRIDA</h2>
@@ -159,7 +159,7 @@
             </div>
 
             <!-- RACE CALENDAR SCREEN -->
-            <div id="raceCalendarScreen" class="screen p-6">
+            <div id="raceCalendarScreen" class="screen p-6 hidden">
                  <div class="flex items-center justify-between mb-6">
                     <button onclick="showScreen('studentProfileScreen')" class="text-gray-400"><i data-feather="arrow-left"></i></button>
                     <h2 class="text-2xl font-black text-white italic">PRÓXIMAS PROVAS</h2>
@@ -169,7 +169,7 @@
             </div>
 
             <!-- OUTDOOR SELECTION SCREEN -->
-            <div id="outdoorSelectionScreen" class="screen p-6">
+            <div id="outdoorSelectionScreen" class="screen p-6 hidden">
                 <div class="flex items-center justify-between mb-8">
                     <button onclick="showScreen('studentProfileScreen')" class="text-gray-400"><i data-feather="arrow-left"></i></button>
                     <h2 class="text-2xl font-black text-white italic">OUTDOOR</h2>
@@ -192,7 +192,7 @@
             </div>
 
             <!-- OUTDOOR TRACKING SCREEN -->
-            <div id="outdoorTrackingScreen" class="screen p-0 flex flex-col h-full">
+            <div id="outdoorTrackingScreen" class="screen p-0 flex flex-col h-full hidden">
                  <div class="bg-gray-900 p-4 border-b border-gray-800 z-20">
                     <div class="flex items-center justify-between mb-4">
                         <button class="outdoor-back-btn text-gray-400" data-target="outdoorSelectionScreen"><i data-feather="arrow-left"></i></button>
@@ -216,10 +216,10 @@
             </div>
 
             <!-- AI ANALYSIS SCREEN (Populated dynamically) -->
-            <div id="aiAnalysisScreen" class="screen"></div>
+            <div id="aiAnalysisScreen" class="screen hidden"></div>
 
             <!-- PHYSIO ASSESSMENT SCREEN -->
-            <div id="physioAssessmentScreen" class="screen p-0">
+            <div id="physioAssessmentScreen" class="screen p-0 hidden">
                 <div class="bg-gray-900 min-h-full pb-20">
                     <!-- Nav -->
                     <div class="bg-gray-800 px-4 py-3 flex justify-between items-center shadow-md border-b border-gray-700 sticky top-0 z-30">

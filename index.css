@@ -22,15 +22,14 @@ html, body {
 .screen {
     width: 100%;
     height: 100%;
-    display: none; /* Escondido por padrão */
-    animation: fadeIn 0.4s ease-out;
+    /* Display is managed by the 'hidden' class from Tailwind or JS toggling */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }
 
-/* Regra para mostrar a tela ativa */
+/* Screen transition animation */
 .screen.active {
-    display: block !important;
+    animation: fadeIn 0.4s ease-out;
 }
 
 @keyframes fadeIn {
@@ -145,5 +144,7 @@ html, body {
 .calendar-day.today { border: 2px solid #ef4444; }
 .calendar-day.treino-A-completed { background: #2563eb; }
 .calendar-day.treino-B-completed { background: #059669; }
+.calendar-day.treino-A-B-completed { background: linear-gradient(135deg, #2563eb, #059669); }
 
+/* Utilities */
 .hidden { display: none !important; }
