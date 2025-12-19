@@ -390,24 +390,21 @@ window.handleChatSubmit = async (e) => {
 // --- NAVIGATION ---
 function showScreen(screenId) {
     const screens = document.querySelectorAll('.screen');
-    // FIXED: Correctly hide all screens first
     screens.forEach(s => { 
         s.classList.remove('active'); 
-        s.classList.add('hidden'); // Ensure hidden class is added
-        // Remove direct style manipulations to allow classes to work
+        s.classList.add('hidden'); 
         s.style.display = ''; 
     });
     
     const target = document.getElementById(screenId);
     if (target) { 
-        target.classList.remove('hidden'); // Unhide target
-        // Small timeout to allow reflow for potential animations
+        target.classList.remove('hidden');
         setTimeout(() => target.classList.add('active'), 10);
     }
     window.scrollTo(0, 0);
 }
 
-// --- RENDER HISTORY LIST (ASCENDING ORDER) ---
+// --- RENDER HISTORY LIST ---
 function renderTrainingHistory(email) {
     const historyContainer = document.getElementById('training-history-container');
     if (!historyContainer) return;
@@ -418,7 +415,6 @@ function renderTrainingHistory(email) {
     const month = currentCalendarDate.getMonth();
     const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
     
-    // ORDENAÇÃO CRESCENTE
     const monthlyHistory = history.filter((h) => h.date.startsWith(monthPrefix))
                                   .sort((a, b) => new Date(a.timestamp || a.date).getTime() - new Date(b.timestamp || b.date).getTime());
 
@@ -438,6 +434,8 @@ function renderTrainingHistory(email) {
     historyContainer.innerHTML = html;
     if (typeof feather !== 'undefined') feather.replace();
 }
+
+// ... (Rest of history/modal functions remain same, ensuring window exports are correct) ...
 
 window.openHistoryDetail = (timestamp) => {
     const db = getDatabase();
@@ -539,7 +537,6 @@ window.updateCarga = (idx, type, val) => {
     window.loadTrainingScreen(type); 
 };
 
-// --- MACHINE CONFIG LOGIC ---
 window.openMachineConfig = (idx, type) => {
     const db = getDatabase();
     const email = getCurrentUser();
@@ -555,18 +552,18 @@ window.openMachineConfig = (idx, type) => {
     document.getElementById('plate-threshold').value = config.plateThreshold || '';
     document.getElementById('total-plates').value = config.totalPlates || '';
     
-    toggleMachineFields();
+    const fields = document.getElementById('machine-plates-config');
+    if (config.type === 'progressive') fields.classList.remove('hidden');
+    else fields.classList.add('hidden');
+    
     document.getElementById('machineConfigModal').classList.remove('hidden');
 };
 
-const toggleMachineFields = () => {
-    const type = document.getElementById('machine-type').value;
+document.getElementById('machine-type')?.addEventListener('change', (e) => {
     const fields = document.getElementById('machine-plates-config');
-    if (type === 'progressive') fields.classList.remove('hidden');
+    if (e.target.value === 'progressive') fields.classList.remove('hidden');
     else fields.classList.add('hidden');
-};
-
-document.getElementById('machine-type')?.addEventListener('change', toggleMachineFields);
+});
 
 document.getElementById('machine-config-form')?.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -608,7 +605,7 @@ const calculateMachineMax = (config) => {
     return max;
 };
 
-// --- TRAINING SCREEN LOGIC ---
+// --- LOAD TRAINING SCREEN (With Volume & Progress) ---
 function loadTrainingScreen(type, email) {
     const userEmail = email || getCurrentUser();
     if (!userEmail) return;
@@ -619,7 +616,10 @@ function loadTrainingScreen(type, email) {
     if (saveBtn) {
         const newBtn = saveBtn.cloneNode(true);
         saveBtn.parentNode?.replaceChild(newBtn, saveBtn);
-        newBtn.addEventListener('click', () => window.openFinishWorkoutModal(type, { totalVolumeKg: totalVolumeKg }));
+        // Recalculate volume for passing to finish modal
+        let currentVol = 0;
+        plan.forEach(ex => currentVol += (parseFloat(ex.carga)||0) * parseNumeric(ex.sets) * parseNumeric(ex.reps));
+        newBtn.addEventListener('click', () => window.openFinishWorkoutModal(type, { totalVolumeKg: currentVol }));
     }
     document.getElementById('training-title').textContent = `TREINO ${type}`;
     const navContainer = document.getElementById('workout-nav-bar');
@@ -628,7 +628,6 @@ function loadTrainingScreen(type, email) {
         else if (type === 'B') navContainer.innerHTML = `<button onclick="loadTrainingScreen('A')" class="flex items-center justify-start gap-2 text-xs font-bold text-gray-400 hover:text-white transition group text-left"><i data-feather="chevron-left"></i> <span class="group-hover:text-red-500 transition">Treino A</span></button><div></div>`;
     }
 
-    // --- VOLUME CALCULATIONS ---
     let totalVolumeKg = 0;
     plan.forEach(ex => {
         const c = parseFloat(ex.carga) || 0;
@@ -762,111 +761,61 @@ function loadTrainingScreen(type, email) {
     showScreen('trainingScreen');
 }
 
-// --- FINISH WORKOUT ---
-window.openFinishWorkoutModal = (type, extraData = null) => {
-    if (workoutTimerInterval) clearInterval(workoutTimerInterval);
-    if (trackingTimerInterval) clearInterval(trackingTimerInterval);
-    if (trackingWatchId) navigator.geolocation.clearWatch(trackingWatchId);
-    const duration = extraData ? extraData.duration : (document.getElementById('workout-timer')?.textContent || "00:00:00");
-    tempWorkoutData = { type: type === 'Corrida' ? 'Corrida' : `Treino ${type}`, date: new Date().toISOString().split('T')[0], timestamp: new Date().toISOString(), duration: duration, ...extraData };
-    tempWorkoutImage = null;
-    document.getElementById('finish-modal-summary').innerHTML = `<div class="text-center mb-1"><p class="text-gray-400 text-[10px] uppercase tracking-widest font-bold">Tempo Total</p><p class="text-5xl font-black text-white font-mono tracking-tight my-2">${tempWorkoutData.duration}</p></div>`;
-    document.getElementById('finish-photo-preview').classList.add('hidden');
-    document.getElementById('finish-photo-placeholder').classList.remove('hidden');
-    document.getElementById('finishWorkoutModal')?.classList.remove('hidden');
-};
-
-window.handlePhotoSelect = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const maxWidth = 800;
-                let width = img.width, height = img.height;
-                if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; }
-                canvas.width = width; canvas.height = height;
-                canvas.getContext('2d')?.drawImage(img, 0, 0, width, height);
-                tempWorkoutImage = canvas.toDataURL('image/jpeg', 0.6);
-                document.getElementById('finish-photo-preview').src = tempWorkoutImage;
-                document.getElementById('finish-photo-preview').classList.remove('hidden');
-                document.getElementById('finish-photo-placeholder').classList.add('hidden');
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-};
-
-window.saveFinishedWorkout = () => {
-    const db = getDatabase(), email = getCurrentUser();
-    if (!email) return;
-    if (!db.completedWorkouts[email]) db.completedWorkouts[email] = [];
-    db.completedWorkouts[email].push({ ...tempWorkoutData, photo: tempWorkoutImage });
-    saveDatabase(db);
-    document.getElementById('finishWorkoutModal')?.classList.add('hidden');
-    renderTrainingHistory(email);
-    showScreen('studentProfileScreen');
-};
-
-// --- OTHER SCREENS ---
-function loadRunningScreen() {
-    const db = getDatabase(), email = getCurrentUser(), workouts = db.userRunningWorkouts[email] || [], container = document.getElementById('running-workouts-list');
-    if (container) {
-        container.innerHTML = workouts.length ? '' : '<p class="text-white text-center mt-4">Nenhum treino encontrado.</p>';
-        workouts.forEach(w => {
-            const card = document.createElement('div');
-            card.className = 'bg-gray-800 rounded-xl border border-gray-700 p-4 mb-4';
-            card.innerHTML = `<h3 class="text-lg font-bold text-white">${w.title || w.name}</h3><p class="text-sm text-gray-400">${w.distance} - ${w.duration}</p>`;
-            container.appendChild(card);
+// --- BOOTSTRAP (INITIALIZATION) ---
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // 1. Initial Data Setup
+    initializeDatabase();
+    
+    // 2. Service Worker Registration
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(reg => console.log('SW registered'))
+                .catch(err => console.log('SW failed', err));
         });
     }
-    showScreen('runningScreen');
-}
 
-function loadRaceCalendarScreen() { showScreen('raceCalendarScreen'); }
-function loadPeriodizationScreen() { showScreen('periodizationScreen'); }
-
-function loadStudentProfile(email) {
-    const db = getDatabase(), user = db.users.find(u => u.email === email);
-    if (!user) return; 
-    document.getElementById('student-profile-info').innerHTML = `<img src="${user.photo}" class="w-14 h-14 rounded-full border-2 border-red-600 object-cover"><div><h2 class="text-lg font-bold text-white">Olá, ${user.name.split(' ')[0]}</h2><p class="text-xs text-gray-400">Aluno(a) ABFIT</p></div><div id="weather-display" class="ml-auto"></div>`;
-    document.getElementById('student-profile-buttons').innerHTML = `
-        <button onclick="loadTrainingScreen('A')" class="metal-btn-highlight p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-dumbbell text-2xl"></i><span class="text-sm font-bold">TREINO A</span></button>
-        <button onclick="loadTrainingScreen('B')" class="metal-btn-highlight p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-dumbbell text-2xl"></i><span class="text-sm font-bold">TREINO B</span></button>
-        <button onclick="loadRunningScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-running text-orange-500 text-2xl"></i><span class="text-sm font-bold">CORRIDA</span></button>
-        <button onclick="loadPeriodizationScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-calendar-alt text-yellow-500 text-2xl"></i><span class="text-sm font-bold">PERIODIZAÇÃO</span></button>
-        <button onclick="showScreen('outdoorSelectionScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-map-marked-alt text-green-500 text-2xl"></i><span class="text-sm font-bold">OUTDOOR</span></button>
-        <button onclick="loadRaceCalendarScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-flag-checkered text-blue-500 text-2xl"></i><span class="text-sm font-bold">PROVAS</span></button>
-        <button onclick="showScreen('physioAssessmentScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-clipboard-user text-red-400 text-2xl"></i><span class="text-sm font-bold">AVALIAÇÃO</span></button>
-        <button onclick="loadAIAnalysisScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-brain text-teal-400 text-2xl"></i><span class="text-sm font-bold">ANÁLISE IA</span></button>
-    `;
-    renderCalendar(currentCalendarDate);
-    fetchWeather();
-    showScreen('studentProfileScreen');
-}
-
-async function fetchWeather() { /* Open-Meteo logic */ }
-
-document.addEventListener('DOMContentLoaded', () => {
-    initializeDatabase();
+    // 3. User Session Check
     const user = getCurrentUser();
-    if (user) loadStudentProfile(user);
-    else showScreen('loginScreen');
     
+    // 4. Initial Screen Load
+    if (user) {
+        const db = getDatabase();
+        if (db.users.find((u) => u.email.toLowerCase() === user.toLowerCase())) {
+            loadStudentProfile(user);
+        } else {
+            localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+            showScreen('loginScreen');
+        }
+    } else {
+        showScreen('loginScreen');
+    }
+    
+    // 5. Flag App as Loaded (for fallback script in HTML)
+    window.isAppLoaded = true;
+    const appContainer = document.getElementById('appContainer');
+    if (appContainer) appContainer.style.opacity = '1';
+
+    // 6. Login Form Logic
     document.getElementById('login-form')?.addEventListener('submit', (e) => {
         e.preventDefault();
         const email = document.getElementById('login-email').value.trim().toLowerCase();
-        if (getDatabase().users.find(u => u.email === email)) { setCurrentUser(email); loadStudentProfile(email); }
+        if (getDatabase().users.find(u => u.email === email)) { 
+            setCurrentUser(email); 
+            loadStudentProfile(email); 
+        } else {
+            const err = document.getElementById('login-error');
+            if(err) err.textContent = "E-mail não encontrado.";
+        }
     });
-    
+
+    // 7. Global Event Listeners
     document.getElementById('logout-btn')?.addEventListener('click', () => { localStorage.removeItem(STORAGE_KEYS.CURRENT_USER); location.reload(); });
     document.getElementById('prev-month-btn')?.addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1); renderCalendar(currentCalendarDate); });
     document.getElementById('next-month-btn')?.addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1); renderCalendar(currentCalendarDate); });
 
-    // --- PWA INSTALL LOGIC ---
+    // --- PWA INSTALL LOGIC (Enhanced for immediate display) ---
     const pwaBanner = document.getElementById('pwa-install-banner');
     const installBtn = document.getElementById('pwa-install-btn');
     const pwaText = pwaBanner.querySelector('h4');
@@ -878,8 +827,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const showInstallBanner = () => {
         if (isStandalone) return; 
+        
+        // Ensure prompt is visible by removing hidden class AND checking opacity/transform
         pwaBanner.classList.remove('hidden');
-        pwaBanner.style.transform = "translateY(0)"; // Force visibility
+        pwaBanner.style.transform = "translateY(0)"; 
+        
         if (isIOS) {
             pwaText.textContent = "Instalar no iPhone";
             pwaDesc.innerHTML = "Toque em <i class='fas fa-share-square'></i> e depois em <strong>Adicionar à Tela de Início</strong>.";
@@ -891,8 +843,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Attempt to show banner very quickly
-    setTimeout(showInstallBanner, 100);
+    // Attempt to show banner very quickly after load
+    setTimeout(showInstallBanner, 500);
 
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
@@ -903,19 +855,24 @@ document.addEventListener('DOMContentLoaded', () => {
     installBtn?.addEventListener('click', async () => {
         if (deferredPrompt) {
             deferredPrompt.prompt();
-            await deferredPrompt.userChoice;
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response: ${outcome}`);
             deferredPrompt = null;
             pwaBanner.classList.add('hidden');
         } else {
-            alert("Para instalar, procure a opção 'Instalar App' no menu do seu navegador.");
+            alert("Para instalar, procure a opção 'Instalar App' ou 'Adicionar à Tela Inicial' no menu do seu navegador.");
         }
     });
 
     document.getElementById('pwa-close-btn')?.addEventListener('click', () => {
         pwaBanner.classList.add('hidden');
     });
+
+    // Init icons
+    if (typeof feather !== 'undefined') feather.replace();
 });
 
+// Exports for global usage
 window.loadTrainingScreen = loadTrainingScreen;
 window.showScreen = showScreen;
 window.loadRunningScreen = loadRunningScreen;

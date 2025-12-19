@@ -19,7 +19,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <script>
-        // Robust Polyfill for process.env to prevent white screen crashes
+        // Robust Polyfill for process.env
         window.process = window.process || {};
         window.process.env = window.process.env || {};
         window.process.env.NODE_ENV = 'production';
@@ -29,8 +29,8 @@
     <script type="importmap">
     {
       "imports": {
-        "@google/genai": "https://aistudiocdn.com/@google/genai@^1.26.0",
-        "@capacitor/cli": "https://aistudiocdn.com/@capacitor/cli@^7.4.4"
+        "@google/genai": "https://esm.run/@google/genai",
+        "@capacitor/cli": "https://esm.run/@capacitor/cli"
       }
     }
     </script>
@@ -445,5 +445,24 @@
     <script src="assessment.js"></script>
     <script type="module" src="index.js"></script>
 
+    <!-- Fallback Script: Forces Login Screen if App hangs on Red Screen (1.5s timeout) -->
+    <script>
+        setTimeout(() => {
+            if (!window.isAppLoaded) {
+                console.warn('App load timeout - Forcing Login Screen fallback.');
+                const login = document.getElementById('loginScreen');
+                const app = document.getElementById('appContainer');
+                if (login && login.classList.contains('hidden')) {
+                    // Hide all other screens first
+                    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+                    // Show login
+                    login.classList.remove('hidden');
+                    login.classList.add('active');
+                    // Ensure app container is visible
+                    if (app) app.style.opacity = '1';
+                }
+            }
+        }, 1500);
+    </script>
 </body>
 </html>
