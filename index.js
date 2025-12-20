@@ -1,4 +1,25 @@
 import { GoogleGenAI } from "@google/genai";
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+
+// --- FIREBASE INITIALIZATION ---
+const firebaseConfig = {
+  apiKey: "AIzaSyD_C_yn_RyBSopY7Tb9aqLW8", // Partially recovered from screenshot, ensure it's correct
+  authDomain: "chaveunica-225e0.firebaseapp.com",
+  projectId: "chaveunica-225e0",
+  storageBucket: "chaveunica-225e0.firebasestorage.app",
+  messagingSenderId: "324211037832",
+  appId: "1:324211037832:web:c1ad3855609fc4d285b13d",
+  measurementId: "G-KYSFBWSS1Y"
+};
+
+try {
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    console.log("Firebase initialized");
+} catch (e) {
+    console.warn("Firebase Init Error (Check API Key):", e);
+}
 
 // Globals defined by imported scripts
 // In pure JS modules, declarations aren't needed, but we assume these exist globally.
@@ -403,6 +424,192 @@ function showScreen(screenId) {
     }
     window.scrollTo(0, 0);
 }
+
+// --- SCREEN LOADERS (Newly Implemented to Fix References) ---
+function loadStudentProfile(email) {
+    const db = getDatabase();
+    const user = db.users.find(u => u.email === email);
+    if (!user) return;
+
+    // 1. Update Profile Header
+    const infoContainer = document.getElementById('student-profile-info');
+    if (infoContainer) {
+        infoContainer.innerHTML = `
+            <div class="w-16 h-16 rounded-full bg-gray-700 border-2 border-red-600 overflow-hidden relative">
+                <img src="${user.photo || 'https://via.placeholder.com/150'}" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h2 class="text-white font-bold text-xl leading-none">${user.name}</h2>
+                <p class="text-gray-400 text-xs">Atleta de Alta Performance</p>
+                <div class="flex items-center gap-2 mt-1">
+                     <span class="bg-red-600/20 text-red-500 text-[10px] font-bold px-2 py-0.5 rounded border border-red-600/30">PRO</span>
+                     <span class="bg-blue-600/20 text-blue-500 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-600/30">NÍVEL 3</span>
+                </div>
+            </div>
+        `;
+    }
+
+    // 2. Render Main Action Buttons
+    const buttonsContainer = document.getElementById('student-profile-buttons');
+    if (buttonsContainer) {
+        buttonsContainer.innerHTML = `
+            <button onclick="loadTrainingScreen('A')" class="metal-btn p-4 flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all">
+                <i class="fas fa-dumbbell text-2xl text-gray-400 group-hover:text-red-500 transition-colors"></i>
+                <span class="text-xs font-bold text-gray-300 uppercase">Treino A</span>
+            </button>
+            <button onclick="loadTrainingScreen('B')" class="metal-btn p-4 flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all">
+                <i class="fas fa-dumbbell text-2xl text-gray-400 group-hover:text-red-500 transition-colors"></i>
+                <span class="text-xs font-bold text-gray-300 uppercase">Treino B</span>
+            </button>
+            <button onclick="showScreen('outdoorSelectionScreen')" class="metal-btn p-4 flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all">
+                <i class="fas fa-person-running text-2xl text-gray-400 group-hover:text-green-500 transition-colors"></i>
+                <span class="text-xs font-bold text-gray-300 uppercase">Outdoor</span>
+            </button>
+             <button onclick="loadPeriodizationScreen()" class="metal-btn p-4 flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all">
+                <i class="fas fa-calendar-alt text-2xl text-gray-400 group-hover:text-yellow-500 transition-colors"></i>
+                <span class="text-xs font-bold text-gray-300 uppercase">Periodização</span>
+            </button>
+             <button onclick="showScreen('physioAssessmentScreen')" class="metal-btn p-4 flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all">
+                <i class="fas fa-heartbeat text-2xl text-gray-400 group-hover:text-pink-500 transition-colors"></i>
+                <span class="text-xs font-bold text-gray-300 uppercase">Physio</span>
+            </button>
+             <button onclick="loadRunningScreen()" class="metal-btn p-4 flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all">
+                <i class="fas fa-stopwatch text-2xl text-gray-400 group-hover:text-orange-500 transition-colors"></i>
+                <span class="text-xs font-bold text-gray-300 uppercase">Corrida</span>
+            </button>
+            <button onclick="loadRaceCalendarScreen()" class="metal-btn p-4 flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all">
+                <i class="fas fa-flag-checkered text-2xl text-gray-400 group-hover:text-purple-500 transition-colors"></i>
+                <span class="text-xs font-bold text-gray-300 uppercase">Provas</span>
+            </button>
+             <button onclick="loadAIAnalysisScreen()" class="metal-btn-highlight p-4 flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all shadow-lg shadow-red-900/20">
+                <i class="fas fa-robot text-2xl text-red-500 group-hover:text-white transition-colors"></i>
+                <span class="text-xs font-bold text-red-500 group-hover:text-white uppercase">AB Coach</span>
+            </button>
+        `;
+    }
+
+    renderCalendar(currentCalendarDate);
+    showScreen('studentProfileScreen');
+}
+
+function loadRunningScreen() {
+    const list = document.getElementById('running-workouts-list');
+    if (list) {
+        list.innerHTML = `
+            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 text-center">
+                <i class="fas fa-road text-4xl text-gray-600 mb-2"></i>
+                <p class="text-gray-400 text-sm">Nenhum treino de corrida prescrito.</p>
+                <button onclick="showScreen('outdoorSelectionScreen')" class="mt-4 text-blue-400 text-xs font-bold hover:underline">Ir para Outdoor Tracking</button>
+            </div>
+        `;
+    }
+    showScreen('runningScreen');
+}
+
+function loadPeriodizationScreen() {
+    const container = document.getElementById('periodization-content-wrapper');
+    if (container) {
+         container.innerHTML = `
+            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-yellow-500"></div>
+                <h3 class="text-lg font-bold text-white mb-1">Mesociclo 1: Base</h3>
+                <p class="text-xs text-gray-400 mb-2">01/01/2025 - 28/02/2025</p>
+                <div class="w-full bg-gray-700 rounded-full h-2">
+                    <div class="bg-yellow-500 h-2 rounded-full" style="width: 45%"></div>
+                </div>
+                <p class="text-[10px] text-right text-gray-500 mt-1">45% Concluído</p>
+            </div>
+         `;
+    }
+    showScreen('periodizationScreen');
+}
+
+function loadRaceCalendarScreen() {
+    const list = document.getElementById('race-calendar-list');
+    if (list) {
+        list.innerHTML = `
+            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                <div class="flex items-center gap-3">
+                    <div class="bg-purple-600/20 p-3 rounded-lg text-purple-500"><i class="fas fa-flag-checkered"></i></div>
+                    <div>
+                        <h4 class="text-white font-bold">Maratona do Rio</h4>
+                        <p class="text-xs text-gray-400">02 Junho 2025</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    showScreen('raceCalendarScreen');
+}
+
+// --- MODAL FUNCTIONS ---
+function openFinishWorkoutModal(type, { totalVolumeKg } = {}) {
+    window.tempWorkoutData = {
+        type: `Treino ${type}`,
+        duration: document.getElementById('workout-timer')?.textContent || "00:00:00",
+        date: new Date().toISOString().split('T')[0],
+        timestamp: new Date().toISOString(),
+        totalVolumeKg: totalVolumeKg || 0
+    };
+    
+    const summary = document.getElementById('finish-modal-summary');
+    if (summary) {
+        summary.innerHTML = `
+            <div class="flex justify-between mb-2">
+                <span class="text-gray-400 text-xs uppercase">Duração</span>
+                <span class="text-white font-mono font-bold">${tempWorkoutData.duration}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-400 text-xs uppercase">Volume Total</span>
+                <span class="text-white font-mono font-bold">${(tempWorkoutData.totalVolumeKg).toLocaleString('pt-BR')} kg</span>
+            </div>
+        `;
+    }
+    document.getElementById('finish-photo-preview').classList.add('hidden');
+    document.getElementById('finish-photo-placeholder').classList.remove('hidden');
+    document.getElementById('finishWorkoutModal').classList.remove('hidden');
+}
+
+function handlePhotoSelect(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            tempWorkoutImage = e.target.result;
+            const img = document.getElementById('finish-photo-preview');
+            img.src = tempWorkoutImage;
+            img.classList.remove('hidden');
+            document.getElementById('finish-photo-placeholder').classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function saveFinishedWorkout() {
+    const db = getDatabase();
+    const email = getCurrentUser();
+    if (!email) return;
+
+    if (!db.completedWorkouts[email]) db.completedWorkouts[email] = [];
+    
+    const workout = {
+        ...tempWorkoutData,
+        photo: tempWorkoutImage
+    };
+    
+    db.completedWorkouts[email].push(workout);
+    
+    // Reset temporary data
+    tempWorkoutData = {};
+    tempWorkoutImage = null;
+    
+    saveDatabase(db);
+    document.getElementById('finishWorkoutModal').classList.add('hidden');
+    
+    // Refresh history if on profile screen
+    loadStudentProfile(email);
+}
+
 
 // --- RENDER HISTORY LIST ---
 function renderTrainingHistory(email) {
@@ -815,6 +1022,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('prev-month-btn')?.addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1); renderCalendar(currentCalendarDate); });
     document.getElementById('next-month-btn')?.addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1); renderCalendar(currentCalendarDate); });
 
+    // Handle Outdoor Activity Buttons
+    document.querySelectorAll('.outdoor-activity-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentActivityType = btn.dataset.activity;
+            document.getElementById('tracking-activity-title').textContent = currentActivityType;
+            showScreen('outdoorTrackingScreen');
+            if(typeof window.initMap === 'function') window.initMap(); 
+        });
+    });
+
+    document.querySelector('.outdoor-back-btn')?.addEventListener('click', () => showScreen('outdoorSelectionScreen'));
+
     // --- PWA INSTALL LOGIC (Enhanced for immediate display) ---
     const pwaBanner = document.getElementById('pwa-install-banner');
     const installBtn = document.getElementById('pwa-install-btn');
@@ -880,3 +1099,7 @@ window.loadRaceCalendarScreen = loadRaceCalendarScreen;
 window.loadPeriodizationScreen = loadPeriodizationScreen;
 window.loadAIAnalysisScreen = loadAIAnalysisScreen;
 window.openMachineConfig = openMachineConfig;
+window.loadStudentProfile = loadStudentProfile;
+window.openFinishWorkoutModal = openFinishWorkoutModal;
+window.handlePhotoSelect = handlePhotoSelect;
+window.saveFinishedWorkout = saveFinishedWorkout;
