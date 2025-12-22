@@ -4,7 +4,7 @@ html, body {
     margin: 0;
     overflow: hidden;
     background-color: #000000;
-    background-image: linear-gradient(to bottom, #000000 0%, #991b1b 100%);
+    background-image: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
     background-attachment: fixed;
     font-family: 'Inter', sans-serif;
 }
@@ -22,7 +22,6 @@ html, body {
 .screen {
     width: 100%;
     height: 100%;
-    /* Display is managed by the 'hidden' class from Tailwind or JS toggling */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }
@@ -37,7 +36,7 @@ html, body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- LOGO 3D STYLE --- */
+/* --- LOGO 3D STYLE (REPRODUCTION FROM IMAGE) --- */
 .logo-wrapper {
     display: flex;
     flex-direction: column;
@@ -52,17 +51,20 @@ html, body {
     font-style: italic;
     display: inline-flex;
     align-items: baseline;
-    letter-spacing: -0.05em;
+    letter-spacing: -0.07em;
+    transform: skewX(-5deg);
 }
 
 .logo-ab {
-    color: #E21D1D; /* Bright red from image */
+    color: #E21D1D; /* Deep red from image */
     text-shadow: 
         1px 1px 0px #000, 
         2px 2px 0px #000, 
         3px 3px 0px #000, 
-        4px 4px 0px #000, 
-        5px 5px 8px rgba(0,0,0,0.8);
+        4px 4px 0px #000,
+        5px 5px 15px rgba(0,0,0,0.9);
+    position: relative;
+    z-index: 2;
 }
 
 .logo-fit {
@@ -72,17 +74,29 @@ html, body {
         1px 1px 0px #000, 
         2px 2px 0px #000, 
         3px 3px 0px #000, 
-        4px 4px 0px #000, 
-        5px 5px 8px rgba(0,0,0,0.8);
+        4px 4px 0px #000,
+        5px 5px 15px rgba(0,0,0,0.9);
+    position: relative;
+    z-index: 1;
+}
+
+.logo-divider {
+    width: 90%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent 0%, #E21D1D 30%, #ffffff 70%, transparent 100%);
+    margin: 5px 0 10px 0;
+    box-shadow: 0 0 10px rgba(226, 29, 29, 0.4);
 }
 
 .logo-subtitle {
     font-family: 'Inter', sans-serif;
     color: #ffffff;
-    font-weight: 700;
-    text-shadow: 0px 2px 4px rgba(0,0,0,1);
+    font-weight: 500;
+    font-style: italic;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
     white-space: nowrap;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.05em;
+    opacity: 0.9;
 }
 
 /* HUD & Timers */

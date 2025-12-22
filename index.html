@@ -46,7 +46,7 @@
     <div id="appContainer" class="h-screen flex flex-col max-w-lg mx-auto relative z-10" style="opacity: 1;">
         <main class="flex-grow screens-wrapper">
 
-            <!-- LOGIN SCREEN (VISIBLE BY DEFAULT) -->
+            <!-- LOGIN SCREEN -->
             <div id="loginScreen" class="screen active" style="display: block;">
                 <div class="h-full flex flex-col justify-center items-center p-8 w-full">
                     <div class="text-center mb-10 transform">
@@ -54,6 +54,7 @@
                             <h1 class="logo-main text-8xl mb-1">
                                 <span class="logo-ab">AB</span><span class="logo-fit">FIT</span>
                             </h1>
+                            <div class="logo-divider"></div>
                             <p class="logo-subtitle text-sm text-center leading-none">Assessoria em Treinamentos Físicos</p>
                         </div>
                     </div>
@@ -66,7 +67,7 @@
                             class="mt-6 w-full bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black uppercase tracking-widest py-4 rounded-xl shadow-lg shadow-red-900/50 transition-all">
                             ENTRAR
                         </button>
-                        <div id="login-error" class="text-red-400 text-center text-sm font-bold h-4"></div>
+                        <div id="login-error" class="text-red-400 text-center text-sm font-bold h-4 mt-2"></div>
                     </form>
                 </div>
             </div>
@@ -457,7 +458,6 @@
                 const login = document.getElementById('loginScreen');
                 const app = document.getElementById('appContainer');
                 if (login) {
-                    // Force visibility by removing class hidden if present, and adding active
                     login.classList.remove('hidden');
                     login.classList.add('active');
                 }
