@@ -4,7 +4,7 @@ import { getAnalytics } from "firebase/analytics";
 
 // --- FIREBASE INITIALIZATION ---
 const firebaseConfig = {
-  apiKey: "AIzaSyD_C_yn_RyBSopY7Tb9aqLW8", // Partially recovered from screenshot, ensure it's correct
+  apiKey: "AIzaSyD_C_yn_RyBSopY7Tb9aqLW8",
   authDomain: "chaveunica-225e0.firebaseapp.com",
   projectId: "chaveunica-225e0",
   storageBucket: "chaveunica-225e0.firebasestorage.app",
