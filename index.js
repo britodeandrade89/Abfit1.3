@@ -76,16 +76,26 @@ function setCurrentUser(email) { localStorage.setItem(STORAGE_KEYS.CURRENT_USER,
 
 function showScreen(screenId) {
     const screens = document.querySelectorAll('.screen');
-    screens.forEach(s => { 
-        s.classList.add('hidden');
-        s.style.display = 'none';
-    });
-    
-    const target = document.getElementById(screenId);
-    if (target) { 
-        target.classList.remove('hidden');
-        target.style.display = 'block';
-    }
+    const container = document.getElementById('appContainer');
+
+    // Smooth transition out
+    if (container) container.style.opacity = '0';
+
+    setTimeout(() => {
+        screens.forEach(s => { 
+            s.classList.add('hidden');
+            s.style.display = 'none';
+        });
+        
+        const target = document.getElementById(screenId);
+        if (target) { 
+            target.classList.remove('hidden');
+            target.style.display = 'block';
+        }
+
+        // Smooth transition in
+        if (container) container.style.opacity = '1';
+    }, 300);
 }
 
 function renderCalendar(date) {
@@ -165,47 +175,62 @@ function loadStudentProfile(email) {
 }
 
 async function handleLogin(e) {
-    e.preventDefault();
-    const loginForm = document.getElementById('login-form');
+    if (e) e.preventDefault();
+    
     const emailInput = document.getElementById('login-email');
     const loginBtn = document.getElementById('login-btn');
     const errorDiv = document.getElementById('login-error');
     
+    if (!emailInput || !loginBtn || !errorDiv) return;
+
     const email = emailInput.value.trim().toLowerCase();
-    const originalBtnText = loginBtn.textContent;
+    const originalBtnText = "ENTRAR";
 
     // Reset UI
-    errorDiv.textContent = "";
+    clearLoginError();
     emailInput.classList.remove('error-shake');
 
-    // Basic Validation
-    if (!email) {
-        showLoginError("Por favor, informe seu e-mail.");
-        return;
-    }
+    // Multi-layer Validation
+    try {
+        if (!email) {
+            showLoginError("Por favor, informe seu e-mail.");
+            emailInput.focus();
+            return;
+        }
 
-    if (!validateEmail(email)) {
-        showLoginError("Formato de e-mail inválido.");
-        return;
-    }
+        if (!validateEmail(email)) {
+            showLoginError("E-mail com formato inválido.");
+            emailInput.focus();
+            return;
+        }
 
-    // Set Loading State
-    loginBtn.disabled = true;
-    loginBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> VERIFICANDO...';
-    loginBtn.classList.add('opacity-75');
+        // Set Loading State
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> PROCESSANDO...';
+        loginBtn.classList.add('opacity-75');
 
-    // Simulate Network/Processing Delay
-    await new Promise(resolve => setTimeout(resolve, 800));
+        // Security / UX Delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-    const db = getDatabase();
-    const user = db.users.find(u => u.email.toLowerCase() === email);
+        const db = getDatabase();
+        const user = db.users.find(u => u.email.toLowerCase() === email);
 
-    if (user) {
-        setCurrentUser(email);
-        loadStudentProfile(email);
-    } else {
-        showLoginError("Acesso negado: aluno não registrado.");
+        if (user) {
+            setCurrentUser(email);
+            loadStudentProfile(email);
+        } else {
+            throw new Error("NOT_FOUND");
+        }
+    } catch (err) {
+        if (err.message === "NOT_FOUND") {
+            showLoginError("Acesso negado: aluno não registrado.");
+        } else {
+            console.error("Login unexpected error:", err);
+            showLoginError("Erro de sistema. Tente novamente.");
+        }
+        
         emailInput.classList.add('error-shake');
+        emailInput.select(); // UX: Select text for easy correction
         
         // Reset Button
         loginBtn.disabled = false;
@@ -216,11 +241,26 @@ async function handleLogin(e) {
 
 function showLoginError(msg) {
     const errorDiv = document.getElementById('login-error');
-    errorDiv.textContent = msg;
-    errorDiv.classList.add('text-red-500', 'animate-pulse');
-    setTimeout(() => {
+    const emailInput = document.getElementById('login-email');
+    if (errorDiv) {
+        errorDiv.textContent = msg;
+        errorDiv.classList.add('text-red-500', 'animate-pulse');
+    }
+    if (emailInput) {
+        emailInput.classList.add('border-red-600');
+    }
+}
+
+function clearLoginError() {
+    const errorDiv = document.getElementById('login-error');
+    const emailInput = document.getElementById('login-email');
+    if (errorDiv) {
+        errorDiv.textContent = "";
         errorDiv.classList.remove('animate-pulse');
-    }, 2000);
+    }
+    if (emailInput) {
+        emailInput.classList.remove('border-red-600');
+    }
 }
 
 window.loadTrainingScreen = (type) => {
@@ -262,6 +302,10 @@ window.loadTrainingScreen = (type) => {
 function initApp() {
     console.log("Initializing ABFIT App...");
     
+    // Ensure container visibility on start
+    const container = document.getElementById('appContainer');
+    if (container) container.style.opacity = '1';
+
     if (!localStorage.getItem(STORAGE_KEYS.DATABASE)) {
         saveDatabase(defaultDatabase);
     }
@@ -273,10 +317,33 @@ function initApp() {
         showScreen('loginScreen');
     }
 
-    // Login Form
+    // Login Form Setup
     const loginForm = document.getElementById('login-form');
+    const emailInput = document.getElementById('login-email');
+    
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
+    }
+
+    if (emailInput) {
+        // Real-time validation visual feedback
+        emailInput.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            clearLoginError();
+            
+            if (val.length > 0) {
+                if (validateEmail(val)) {
+                    emailInput.classList.remove('border-gray-600');
+                    emailInput.classList.add('border-green-500', 'shadow-[0_4px_10px_rgba(34,197,94,0.2)]');
+                } else {
+                    emailInput.classList.remove('border-green-500', 'shadow-[0_4px_10px_rgba(34,197,94,0.2)]');
+                    emailInput.classList.add('border-gray-400');
+                }
+            } else {
+                emailInput.classList.remove('border-green-500', 'border-gray-400', 'shadow-[0_4px_10px_rgba(34,197,94,0.2)]');
+                emailInput.classList.add('border-gray-600');
+            }
+        });
     }
 
     // Month Navigation
@@ -303,4 +370,4 @@ function initApp() {
 window.showScreen = showScreen;
 
 // Executa o init
-initApp();
+document.addEventListener('DOMContentLoaded', initApp);

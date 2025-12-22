@@ -24,7 +24,7 @@ html, body {
     -webkit-overflow-scrolling: touch;
 }
 
-/* --- LOGO 3D STYLE (REPRODUZINDO A IMAGEM) --- */
+/* --- LOGO 3D STYLE --- */
 .logo-wrapper {
     display: flex;
     flex-direction: column;
@@ -40,11 +40,11 @@ html, body {
     display: inline-flex;
     align-items: baseline;
     letter-spacing: -0.07em;
-    transform: skewX(-8deg); /* Inclinação aerodinâmica */
+    transform: skewX(-8deg); 
 }
 
 .logo-ab {
-    color: #E21D1D; /* Vermelho vibrante da imagem */
+    color: #E21D1D; 
     text-shadow: 
         1px 1px 0px #000, 
         2px 2px 0px #000, 
@@ -160,4 +160,13 @@ html, body {
 
 #login-error {
     transition: all 0.3s ease;
+}
+
+.transition-opacity {
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Specific Focus Line */
+.input-focus-line {
+    pointer-events: none;
 }
