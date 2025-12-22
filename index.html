@@ -14,10 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
+    
     <script>
         // Robust Polyfill for process.env
         window.process = window.process || {};
@@ -31,7 +28,6 @@
 {
   "imports": {
     "@google/genai": "https://esm.sh/@google/genai@0.1.0",
-    "@capacitor/cli": "https://esm.sh/@capacitor/cli",
     "firebase/app": "https://esm.sh/firebase@10.7.1/app",
     "firebase/analytics": "https://esm.sh/firebase@10.7.1/analytics",
     "firebase/": "https://esm.sh/firebase@^12.7.0/"
@@ -58,7 +54,7 @@
                             <p class="logo-subtitle text-sm text-center leading-none">Assessoria em Treinamentos Físicos</p>
                         </div>
                     </div>
-                    <form id="login-form" class="w-full max-w-xs flex flex-col gap-4" onsubmit="event.preventDefault(); return false;">
+                    <form id="login-form" class="w-full max-w-xs flex flex-col gap-4" onsubmit="event.preventDefault();">
                         <div class="relative">
                             <input type="email" id="login-email" required placeholder="Seu e-mail de aluno"
                                 class="w-full p-4 bg-transparent border-b-2 border-gray-600 text-white text-center text-lg placeholder-gray-500 focus:border-red-600 focus:outline-none transition-colors rounded-none">
@@ -84,13 +80,8 @@
                     <button id="logout-btn" class="text-gray-400 p-2"><i data-feather="log-out"></i></button>
                 </header>
 
-                <div id="student-profile-info" class="flex items-center gap-4 mb-6">
-                    <!-- Injected via JS -->
-                </div>
-
-                <div id="student-profile-buttons" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                    <!-- Injected via JS -->
-                </div>
+                <div id="student-profile-info" class="flex items-center gap-4 mb-6"></div>
+                <div id="student-profile-buttons" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6"></div>
                 
                 <div class="mt-8">
                     <div class="flex justify-between items-center mb-4 px-1">
@@ -107,17 +98,6 @@
                 </div>
 
                 <div id="training-history-container" class="mt-8"></div>
-                
-                <!-- Footer Links -->
-                <div class="mt-12 pb-8 grid grid-cols-2 gap-4 text-xs text-gray-500 border-t border-gray-800 pt-8">
-                    <button onclick="openInfoModal('sobre')" class="text-left hover:text-white">Sobre a ABFIT</button>
-                    <button onclick="openInfoModal('carreiras')" class="text-left hover:text-white">Carreiras</button>
-                    <button onclick="openInfoModal('imprensa')" class="text-left hover:text-white">Imprensa</button>
-                    <button onclick="openInfoModal('fale')" class="text-left hover:text-white">Fale Conosco</button>
-                    <button onclick="openInfoModal('suporte')" class="text-left hover:text-white">Suporte Técnico</button>
-                    <button onclick="openInfoModal('privacidade')" class="text-left hover:text-white">Privacidade</button>
-                    <button onclick="openInfoModal('termos')" class="text-left hover:text-white">Termos de Uso</button>
-                </div>
             </div>
 
             <!-- TRAINING SCREEN -->
@@ -125,197 +105,25 @@
                 <div class="pb-24 p-4">
                     <div class="sticky top-0 bg-black/90 backdrop-blur-md z-20 pb-4 pt-2 mb-4 border-b border-gray-800">
                         <div class="flex items-center justify-between mb-4">
-                             <button onclick="showScreen('studentProfileScreen')" class="text-gray-400 hover:text-white"><i data-feather="arrow-left"></i></button>
+                             <button onclick="window.showScreen('studentProfileScreen')" class="text-gray-400 hover:text-white"><i data-feather="arrow-left"></i></button>
                              <div class="timer-header-box">
-                                <p id="training-title" class="text-center"></p>
+                                <p id="training-title" class="text-center text-white text-xs font-bold uppercase"></p>
                                 <div id="workout-timer" class="digital-timer">00:00:00</div>
                              </div>
                              <div class="w-6"></div>
                         </div>
-                        <div id="workout-nav-bar" class="grid grid-cols-2 gap-4 px-2"></div>
                     </div>
                     <div id="training-content-wrapper" class="space-y-4"></div>
-                    <div class="fixed bottom-6 left-6 right-6 z-30">
-                        <button id="save-training-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-4 rounded-2xl shadow-2xl uppercase tracking-widest text-lg flex items-center justify-center gap-2 border-2 border-red-500">
-                            <i class="fas fa-check-circle"></i> Finalizar Treino
-                        </button>
-                    </div>
                 </div>
             </div>
 
-            <!-- PERIODIZATION SCREEN -->
-            <div id="periodizationScreen" class="screen hidden p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <button onclick="showScreen('studentProfileScreen')" class="text-gray-400"><i data-feather="arrow-left"></i></button>
-                    <h2 class="text-2xl font-black text-white italic">PERIODIZAÇÃO</h2>
-                    <div class="w-6"></div>
-                </div>
-                <div id="periodization-content-wrapper" class="space-y-4"></div>
-            </div>
-
-            <!-- RUNNING SCREEN -->
-            <div id="runningScreen" class="screen hidden p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <button onclick="showScreen('studentProfileScreen')" class="text-gray-400"><i data-feather="arrow-left"></i></button>
-                    <h2 class="text-2xl font-black text-white italic">CORRIDA</h2>
-                    <div class="w-6"></div>
-                </div>
-                <div id="running-workouts-list" class="space-y-4"></div>
-            </div>
-
-            <!-- RACE CALENDAR SCREEN -->
-            <div id="raceCalendarScreen" class="screen hidden p-6">
-                 <div class="flex items-center justify-between mb-6">
-                    <button onclick="showScreen('studentProfileScreen')" class="text-gray-400"><i data-feather="arrow-left"></i></button>
-                    <h2 class="text-2xl font-black text-white italic">PRÓXIMAS PROVAS</h2>
-                    <div class="w-6"></div>
-                </div>
-                <div id="race-calendar-list" class="space-y-4"></div>
-            </div>
-
-            <!-- OUTDOOR SELECTION SCREEN -->
-            <div id="outdoorSelectionScreen" class="screen hidden p-6">
-                <div class="flex items-center justify-between mb-8">
-                    <button onclick="showScreen('studentProfileScreen')" class="text-gray-400"><i data-feather="arrow-left"></i></button>
-                    <h2 class="text-2xl font-black text-white italic">OUTDOOR</h2>
-                    <div class="w-6"></div>
-                </div>
-                <div class="grid grid-cols-1 gap-4">
-                    <button class="outdoor-activity-btn bg-gray-800 p-6 rounded-2xl border border-gray-700 flex items-center gap-4 hover:bg-gray-700" data-activity="Caminhada">
-                        <div class="bg-green-500/20 p-4 rounded-full text-green-500"><i class="fas fa-walking text-2xl"></i></div>
-                        <div class="text-left"><h3 class="font-bold text-lg text-white">Caminhada</h3><p class="text-xs text-gray-400">Rastreamento GPS</p></div>
-                    </button>
-                     <button class="outdoor-activity-btn bg-gray-800 p-6 rounded-2xl border border-gray-700 flex items-center gap-4 hover:bg-gray-700" data-activity="Corrida">
-                        <div class="bg-orange-500/20 p-4 rounded-full text-orange-500"><i class="fas fa-running text-2xl"></i></div>
-                        <div class="text-left"><h3 class="font-bold text-lg text-white">Corrida de Rua</h3><p class="text-xs text-gray-400">Rastreamento GPS + Pace</p></div>
-                    </button>
-                     <button class="outdoor-activity-btn bg-gray-800 p-6 rounded-2xl border border-gray-700 flex items-center gap-4 hover:bg-gray-700" data-activity="Ciclismo">
-                        <div class="bg-blue-500/20 p-4 rounded-full text-blue-500"><i class="fas fa-bicycle text-2xl"></i></div>
-                        <div class="text-left"><h3 class="font-bold text-lg text-white">Ciclismo</h3><p class="text-xs text-gray-400">Rastreamento GPS</p></div>
-                    </button>
-                </div>
-            </div>
-
-            <!-- OUTDOOR TRACKING SCREEN -->
-            <div id="outdoorTrackingScreen" class="screen hidden p-0 flex flex-col h-full">
-                 <div class="bg-gray-900 p-4 border-b border-gray-800 z-20">
-                    <div class="flex items-center justify-between mb-4">
-                        <button class="outdoor-back-btn text-gray-400" data-target="outdoorSelectionScreen"><i data-feather="arrow-left"></i></button>
-                        <h2 id="tracking-activity-title" class="text-xl font-black text-white uppercase italic"></h2>
-                        <div class="w-6"></div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2 text-center">
-                        <div><p class="text-[10px] text-gray-500 uppercase font-bold">Distância</p><p id="tracking-distance" class="text-xl font-mono font-bold text-white">0.00 km</p></div>
-                        <div><p class="text-[10px] text-gray-500 uppercase font-bold">Tempo</p><p id="tracking-time" class="text-xl font-mono font-bold text-yellow-500">00:00:00</p></div>
-                        <div><p class="text-[10px] text-gray-500 uppercase font-bold">Pace</p><p id="tracking-pace" class="text-xl font-mono font-bold text-gray-300">--:--</p></div>
-                    </div>
-                </div>
-                <div id="map" class="flex-grow bg-gray-800 relative z-10"></div>
-                <div class="bg-gray-900 p-6 pb-8 z-20">
-                    <button id="start-tracking-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg">INICIAR</button>
-                    <div class="grid grid-cols-2 gap-4 hidden" id="pause-tracking-btn">
-                        <button class="bg-yellow-600 hover:bg-yellow-700 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg">PAUSAR</button>
-                        <button id="stop-tracking-btn" class="bg-red-600 hover:bg-red-700 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg">FINALIZAR</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- AI ANALYSIS SCREEN (Populated dynamically) -->
-            <div id="aiAnalysisScreen" class="screen hidden"></div>
-
-            <!-- PHYSIO ASSESSMENT SCREEN -->
-            <div id="physioAssessmentScreen" class="screen hidden p-0">
-                <div class="bg-gray-900 min-h-full pb-20">
-                    <!-- Nav -->
-                    <div class="bg-gray-800 px-4 py-3 flex justify-between items-center shadow-md border-b border-gray-700 sticky top-0 z-30">
-                        <div class="flex items-center space-x-2">
-                             <button onclick="showScreen('studentProfileScreen')" class="text-gray-400 mr-2"><i data-feather="arrow-left"></i></button>
-                            <i class="fas fa-heartbeat text-red-500 text-xl"></i>
-                            <h1 class="text-lg font-bold text-white tracking-wide">PhysioApp</h1>
-                        </div>
-                        <div class="flex bg-gray-700 rounded-lg p-1">
-                            <button id="tab-professor" class="px-3 py-1 text-xs font-bold rounded-md text-gray-300 tab-active">Professor</button>
-                            <button id="tab-aluno" class="px-3 py-1 text-xs font-bold rounded-md text-gray-300">Aluno</button>
-                        </div>
-                    </div>
-
-                    <!-- Content -->
-                    <div class="p-4">
-                        <!-- VIEW PROFESSOR -->
-                        <div id="view-professor">
-                            <div id="professor-dashboard">
-                                <div class="flex justify-between items-center mb-6">
-                                    <h2 class="text-xl font-bold text-white">Meus Alunos</h2>
-                                    <button id="btn-add-aluno" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg flex items-center gap-2">
-                                        <i class="fas fa-plus"></i> Novo
-                                    </button>
-                                </div>
-                                
-                                <div id="loader" class="text-center py-10 hidden">
-                                    <i class="fas fa-circle-notch fa-spin text-4xl text-blue-500"></i>
-                                    <p class="mt-2 text-gray-400">Carregando dados...</p>
-                                </div>
-
-                                <div id="no-alunos-message" class="text-center py-12 bg-gray-800 rounded-xl border border-gray-700 hidden">
-                                    <i class="fas fa-users text-4xl text-gray-600 mb-3"></i>
-                                    <p class="text-gray-400">Nenhum aluno cadastrado.</p>
-                                </div>
-
-                                <div id="lista-alunos" class="grid grid-cols-1 gap-4"></div>
-                            </div>
-
-                            <!-- FORM AVALIACAO -->
-                            <div id="form-avaliacao" class="hidden">
-                                <div class="flex items-center mb-6">
-                                    <button id="btn-back-to-dashboard" class="mr-4 bg-gray-700 text-white p-2 rounded-full"><i class="fas fa-arrow-left"></i></button>
-                                    <h2 class="text-xl font-bold text-white">Nova Avaliação: <span id="form-aluno-nome" class="text-blue-400"></span></h2>
-                                </div>
-                                <form id="avaliacao-form" class="space-y-6">
-                                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
-                                        <label class="block text-gray-400 text-xs font-bold uppercase mb-2">Data da Avaliação</label>
-                                        <input type="date" id="data" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none" required>
-                                    </div>
-
-                                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
-                                        <h3 class="text-blue-400 font-bold mb-4 flex items-center gap-2"><i class="fas fa-ruler-vertical"></i> Dados Básicos</h3>
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div><label class="block text-gray-500 text-xs mb-1">Peso (kg)</label><input type="number" step="0.1" id="peso" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white" required></div>
-                                            <div><label class="block text-gray-500 text-xs mb-1">Altura (cm)</label><input type="number" step="1" id="altura" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white" required></div>
-                                        </div>
-                                    </div>
-
-                                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
-                                        <h3 class="text-blue-400 font-bold mb-4 flex items-center gap-2"><i class="fas fa-compress-arrows-alt"></i> Dobras Cutâneas (mm)</h3>
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div class="skinfold-field-wrapper" data-gender="Masculino Feminino"><label class="block text-gray-500 text-xs mb-1">Coxa</label><input type="number" step="0.1" id="dc_coxa" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white"></div>
-                                            <div class="skinfold-field-wrapper" data-gender="Masculino"><label class="block text-gray-500 text-xs mb-1">Peitoral</label><input type="number" step="0.1" id="dc_peitoral" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white"></div>
-                                            <div class="skinfold-field-wrapper" data-gender="Masculino"><label class="block text-gray-500 text-xs mb-1">Abdominal</label><input type="number" step="0.1" id="dc_abdominal" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white"></div>
-                                            <div class="skinfold-field-wrapper" data-gender="Feminino"><label class="block text-gray-500 text-xs mb-1">Tricipital</label><input type="number" step="0.1" id="dc_tricipital" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white"></div>
-                                            <div class="skinfold-field-wrapper" data-gender="Feminino"><label class="block text-gray-500 text-xs mb-1">Suprailíaca</label><input type="number" step="0.1" id="dc_suprailiaca" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white"></div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Hidden simplified fields for full implementation if needed later -->
-                                    <div class="hidden"><input id="p_torax"><input id="p_abdomen"><input id="p_cintura"><input id="p_quadril"><input id="p_braco_d"><input id="p_braco_e"><input id="p_antebraco_d"><input id="p_antebraco_e"><input id="p_coxa_proximal_d"><input id="p_coxa_proximal_e"><input id="p_coxa_d"><input id="p_coxa_e"><input id="p_coxa_distal_d"><input id="p_coxa_distal_e"><input id="p_panturrilha_d"><input id="p_panturrilha_e"><input id="bio_agua_corporal"><input id="bio_proteina"><input id="bio_minerais"><input id="bio_massa_gordura"><input id="bio_massa_magra"><input id="bio_tmb"><input id="bio_gordura_visceral"><input id="bio_grau_obesidade"></div>
-
-                                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg">Salvar Avaliação</button>
-                                </form>
-                            </div>
-                            
-                            <!-- DATA VIEW -->
-                            <div id="view-aluno-data" class="hidden"></div>
-                        </div>
-
-                        <!-- VIEW ALUNO -->
-                        <div id="view-aluno" class="hidden">
-                             <div id="aluno-login-screen" class="text-center py-12">
-                                <h2 class="text-xl font-bold text-white mb-4">Acesso do Aluno</h2>
-                                <select id="aluno-selector" class="w-full bg-gray-800 text-white p-4 rounded-xl border border-gray-700 text-lg mb-4">
-                                    <option value="">Carregando...</option>
-                                </select>
-                            </div>
-                            <div id="aluno-dashboard" class="hidden"></div>
-                        </div>
+            <!-- AI ANALYSIS SCREEN -->
+            <div id="aiAnalysisScreen" class="screen hidden">
+                <div class="p-6">
+                    <button onclick="window.showScreen('studentProfileScreen')" class="text-gray-400 mb-4"><i data-feather="arrow-left"></i></button>
+                    <h2 class="text-2xl font-black text-white italic mb-4">AB COACH AI</h2>
+                    <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700">
+                        <p class="text-gray-300">Em breve: Análise personalizada do seu progresso com inteligência artificial.</p>
                     </div>
                 </div>
             </div>
@@ -323,144 +131,14 @@
         </main>
     </div>
 
-    <!-- PWA Install Banner -->
-    <div id="pwa-install-banner" class="fixed bottom-0 left-0 right-0 z-[100] bg-gray-900 border-t border-gray-700 p-4 shadow-2xl transform translate-y-full transition-transform duration-300 hidden">
-        <div class="flex items-center justify-between max-w-lg mx-auto">
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center text-white font-black italic">AB</div>
-                <div>
-                    <h4 class="text-white font-bold text-sm">Instalar ABFIT</h4>
-                    <p id="pwa-description" class="text-gray-400 text-xs">Acesse offline e mais rápido.</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-2">
-                <button id="pwa-close-btn" class="text-gray-400 hover:text-white p-2"><i data-feather="x"></i></button>
-                <button id="pwa-install-btn" class="bg-white text-gray-900 font-bold px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition">Instalar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODALS -->
-    <!-- Exercise Detail Modal -->
-    <div id="exerciseDetailModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 hidden backdrop-blur-sm transition-opacity">
-        <div id="exercise-modal-content" class="bg-gray-800 w-11/12 max-w-md rounded-2xl overflow-hidden shadow-2xl transform scale-95 opacity-0 transition-all duration-300 border border-gray-600">
-            <div class="relative">
-                <img id="modal-exercise-img" src="" class="w-full h-64 object-cover">
-                <div class="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
-                <button id="closeExerciseModalBtn" class="absolute top-4 right-4 bg-black/40 text-white p-2 rounded-full backdrop-blur-md hover:bg-black/60 transition"><i data-feather="x"></i></button>
-            </div>
-            <div class="p-6 relative -mt-6">
-                <h3 id="modal-exercise-name" class="text-2xl font-black text-white uppercase leading-tight drop-shadow-lg mb-2"></h3>
-                <p class="text-gray-300 text-sm leading-relaxed">Execute com controle.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Machine Config Modal -->
-    <div id="machineConfigModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 hidden backdrop-blur-sm transition-opacity">
-        <div id="machine-modal-content" class="bg-gray-800 w-11/12 max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-600 relative">
-             <button id="closeMachineConfigBtn" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i data-feather="x"></i></button>
-             <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2"><i class="fas fa-cogs text-blue-500"></i> Configurar Máquina</h3>
-             <form id="machine-config-form" class="space-y-4">
-                 <div>
-                     <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Tipo de Máquina</label>
-                     <select id="machine-type" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg p-2 text-sm">
-                         <option value="fixed">Carga Fixa (Padrão)</option>
-                         <option value="progressive">Placas Progressivas</option>
-                     </select>
-                 </div>
-                 <div id="machine-plates-config" class="space-y-3 hidden">
-                     <div class="grid grid-cols-2 gap-3">
-                         <div><label class="block text-[10px] font-bold text-gray-500 uppercase">Peso Placa 1 (kg)</label><input type="number" id="plate-weight-1" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg p-2 text-sm"></div>
-                         <div><label class="block text-[10px] font-bold text-gray-500 uppercase">Peso Placa 2 (kg)</label><input type="number" id="plate-weight-2" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg p-2 text-sm" placeholder="Opcional"></div>
-                     </div>
-                     <div><label class="block text-[10px] font-bold text-gray-500 uppercase">Mudar após Placa Nº</label><input type="number" id="plate-threshold" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg p-2 text-sm" placeholder="Ex: 5 (se muda na 6ª)"></div>
-                     <div><label class="block text-[10px] font-bold text-gray-500 uppercase">Total de Placas</label><input type="number" id="total-plates" class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg p-2 text-sm"></div>
-                 </div>
-                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl uppercase tracking-widest text-sm">Salvar Configuração</button>
-             </form>
-        </div>
-    </div>
-
-    <!-- Periodization Detail Modal -->
-    <div id="periodizationDetailModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 hidden backdrop-blur-sm transition-opacity">
-        <div id="periodization-modal-content" class="bg-gray-800 w-11/12 max-w-md rounded-2xl p-6 shadow-2xl transform scale-95 opacity-0 transition-all duration-300 border border-gray-600 relative">
-            <button id="closePeriodizationModalBtn" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i data-feather="x"></i></button>
-            <h3 id="modal-periodization-phase" class="text-2xl font-black text-white uppercase mb-1"></h3>
-            <p id="modal-periodization-dates" class="text-sm text-gray-400 font-bold mb-4 flex items-center gap-2"></p>
-            <div class="bg-gray-700/50 p-3 rounded-lg border border-gray-600 mb-4"><p id="modal-periodization-goal" class="text-white font-medium flex items-center gap-2"></p></div>
-            <div id="modal-periodization-details"></div>
-        </div>
-    </div>
-
-    <!-- Finish Workout Modal -->
-    <div id="finishWorkoutModal" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 hidden backdrop-blur-sm p-4">
-        <div class="bg-gray-800 w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-700 relative flex flex-col items-center">
-            <h3 class="text-2xl font-black text-white uppercase italic mb-2">Treino Finalizado!</h3>
-            <div id="finish-modal-summary" class="w-full bg-gray-900/50 rounded-xl p-4 mb-6 border border-gray-600"></div>
-            <div class="w-full mb-6">
-                <label for="workout-photo-input" class="cursor-pointer group block relative w-full aspect-square bg-gray-900 rounded-xl border-2 border-dashed border-gray-600 hover:border-red-500 transition overflow-hidden flex flex-col items-center justify-center">
-                     <div id="finish-photo-placeholder" class="text-center p-4"><i class="fas fa-camera text-3xl text-gray-500 mb-2"></i><p class="text-xs text-gray-400 uppercase">Selfie</p></div>
-                     <img id="finish-photo-preview" class="hidden absolute inset-0 w-full h-full object-cover">
-                     <input type="file" id="workout-photo-input" accept="image/*" class="hidden" onchange="window.handlePhotoSelect && window.handlePhotoSelect(event)">
-                </label>
-            </div>
-            <div class="grid grid-cols-2 gap-3 w-full">
-                <button onclick="document.getElementById('finishWorkoutModal').classList.add('hidden')" class="py-3 rounded-xl font-bold text-gray-400 hover:bg-gray-700">Cancelar</button>
-                <button onclick="window.saveFinishedWorkout && window.saveFinishedWorkout()" class="py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold">Salvar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Workout Result Modal -->
-    <div id="workoutResultModal" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 hidden backdrop-blur-sm p-4">
-        <div class="bg-gray-800 w-full max-w-sm rounded-2xl p-0 shadow-2xl border border-gray-700 relative overflow-hidden">
-            <div class="relative h-64 bg-gray-900 flex items-center justify-center">
-                <img id="history-modal-img" class="absolute inset-0 w-full h-full object-cover hidden">
-                <div id="history-modal-no-img" class="flex flex-col items-center text-gray-600"><i class="fas fa-dumbbell text-4xl mb-2"></i></div>
-                <button onclick="document.getElementById('workoutResultModal').classList.add('hidden')" class="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full"><i data-feather="x"></i></button>
-            </div>
-            <div class="p-6 relative -mt-4 bg-gray-800">
-                 <div class="flex justify-between items-end mb-4">
-                    <div><p id="history-modal-date" class="text-xs text-red-500 font-bold uppercase"></p><h3 id="history-modal-type" class="text-2xl font-black text-white italic uppercase"></h3></div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 bg-gray-900/50 p-4 rounded-xl border border-gray-700">
-                    <div class="text-center border-r border-gray-700"><p class="text-[10px] text-gray-400 uppercase">Tempo</p><p id="history-modal-duration" class="text-xl font-mono font-bold text-white"></p></div>
-                     <div class="text-center hidden" id="history-modal-distance-box"><p class="text-[10px] text-gray-400 uppercase">Distância</p><p id="history-modal-distance" class="text-xl font-mono font-bold text-white"></p></div>
-                     <div class="col-span-2 hidden" id="history-modal-volume-box">
-                         <div class="border-t border-gray-700 pt-2 mt-1">
-                             <div class="flex justify-between text-xs mb-1"><span class="text-gray-400">Volume (kg):</span><span class="text-white font-bold" id="history-modal-volume-kg"></span></div>
-                             <div class="flex justify-between text-xs"><span class="text-gray-400">Força (N):</span><span class="text-red-400 font-bold" id="history-modal-volume-n"></span></div>
-                         </div>
-                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Info Modal (Footer) -->
-    <div id="infoModal" class="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 hidden backdrop-blur-sm p-6">
-        <div class="bg-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-gray-700 relative">
-            <button onclick="document.getElementById('infoModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i data-feather="x"></i></button>
-            <h3 id="info-modal-title" class="text-xl font-bold text-white mb-4"></h3>
-            <div id="info-modal-body" class="text-gray-300 text-sm leading-relaxed space-y-2"></div>
-        </div>
-    </div>
-
-    <script src="assessment.js"></script>
     <script type="module" src="index.js"></script>
 
-    <!-- Fallback Script: Forces Login Screen if App hangs on Red Screen (1.5s timeout) -->
+    <!-- Fallback Script -->
     <script>
         setTimeout(() => {
             if (!window.isAppLoaded) {
-                console.warn('App load timeout - Forcing Login Screen fallback.');
-                const login = document.getElementById('loginScreen');
-                const app = document.getElementById('appContainer');
-                if (login) {
-                    login.classList.remove('hidden');
-                    login.classList.add('active');
-                }
+                console.warn('App load timeout. Forcing UI.');
+                document.getElementById('loginScreen').style.display = 'block';
             }
         }, 1500);
     </script>
