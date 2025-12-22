@@ -56,23 +56,33 @@ html, body {
 }
 
 .logo-ab {
-    color: #dc2626;
-    text-shadow: 1px 1px 0px #b91c1c, 2px 2px 0px #991b1b, 3px 3px 0px #7f1d1d, 4px 4px 0px #450a0a, 5px 5px 8px rgba(0,0,0,0.6);
+    color: #E21D1D; /* Bright red from image */
+    text-shadow: 
+        1px 1px 0px #000, 
+        2px 2px 0px #000, 
+        3px 3px 0px #000, 
+        4px 4px 0px #000, 
+        5px 5px 8px rgba(0,0,0,0.8);
 }
 
 .logo-fit {
     color: #ffffff;
     margin-left: 0.05em;
-    text-shadow: 1px 1px 0px #e5e7eb, 2px 2px 0px #d1d5db, 3px 3px 0px #9ca3af, 4px 4px 0px #4b5563, 5px 5px 8px rgba(0,0,0,0.6);
+    text-shadow: 
+        1px 1px 0px #000, 
+        2px 2px 0px #000, 
+        3px 3px 0px #000, 
+        4px 4px 0px #000, 
+        5px 5px 8px rgba(0,0,0,0.8);
 }
 
 .logo-subtitle {
-    font-family: 'Chakra Petch', sans-serif;
+    font-family: 'Inter', sans-serif;
     color: #ffffff;
-    text-transform: uppercase;
     font-weight: 700;
-    text-shadow: 0px 2px 4px rgba(0,0,0,0.9);
+    text-shadow: 0px 2px 4px rgba(0,0,0,1);
     white-space: nowrap;
+    letter-spacing: 0.02em;
 }
 
 /* HUD & Timers */
