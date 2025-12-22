@@ -217,8 +217,9 @@ function calculatePace(ms, meters) {
     const minutes = ms / 1000 / 60;
     const paceDec = minutes / km;
     const paceMin = Math.floor(paceDec);
+    const paceMinStr = paceMin.toString();
     const paceSec = Math.floor((paceDec - paceMin) * 60).toString().padStart(2, '0');
-    return `${paceMin}:${paceSec}`;
+    return `${paceMinStr}:${paceSec}`;
 }
 
 function parseNumeric(val) {
@@ -968,129 +969,6 @@ function loadTrainingScreen(type, email) {
     showScreen('trainingScreen');
 }
 
-// --- BOOTSTRAP (INITIALIZATION) ---
-document.addEventListener('DOMContentLoaded', () => {
-    
-    // 1. Initial Data Setup
-    initializeDatabase();
-    
-    // 2. Service Worker Registration
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/service-worker.js')
-                .then(reg => console.log('SW registered'))
-                .catch(err => console.log('SW failed', err));
-        });
-    }
-
-    // 3. User Session Check
-    const user = getCurrentUser();
-    
-    // 4. Initial Screen Load
-    if (user) {
-        const db = getDatabase();
-        if (db.users.find((u) => u.email.toLowerCase() === user.toLowerCase())) {
-            loadStudentProfile(user);
-        } else {
-            localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-            showScreen('loginScreen');
-        }
-    } else {
-        showScreen('loginScreen');
-    }
-    
-    // 5. Flag App as Loaded (for fallback script in HTML)
-    window.isAppLoaded = true;
-    const appContainer = document.getElementById('appContainer');
-    if (appContainer) appContainer.style.opacity = '1';
-
-    // 6. Login Form Logic
-    document.getElementById('login-form')?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = document.getElementById('login-email').value.trim().toLowerCase();
-        if (getDatabase().users.find(u => u.email === email)) { 
-            setCurrentUser(email); 
-            loadStudentProfile(email); 
-        } else {
-            const err = document.getElementById('login-error');
-            if(err) err.textContent = "E-mail não encontrado.";
-        }
-    });
-
-    // 7. Global Event Listeners
-    document.getElementById('logout-btn')?.addEventListener('click', () => { localStorage.removeItem(STORAGE_KEYS.CURRENT_USER); location.reload(); });
-    document.getElementById('prev-month-btn')?.addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1); renderCalendar(currentCalendarDate); });
-    document.getElementById('next-month-btn')?.addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1); renderCalendar(currentCalendarDate); });
-
-    // Handle Outdoor Activity Buttons
-    document.querySelectorAll('.outdoor-activity-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            currentActivityType = btn.dataset.activity;
-            document.getElementById('tracking-activity-title').textContent = currentActivityType;
-            showScreen('outdoorTrackingScreen');
-            if(typeof window.initMap === 'function') window.initMap(); 
-        });
-    });
-
-    document.querySelector('.outdoor-back-btn')?.addEventListener('click', () => showScreen('outdoorSelectionScreen'));
-
-    // --- PWA INSTALL LOGIC (Enhanced for immediate display) ---
-    const pwaBanner = document.getElementById('pwa-install-banner');
-    const installBtn = document.getElementById('pwa-install-btn');
-    const pwaText = pwaBanner.querySelector('h4');
-    const pwaDesc = pwaBanner.querySelector('p');
-    let deferredPrompt;
-
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator.standalone === true);
-
-    const showInstallBanner = () => {
-        if (isStandalone) return; 
-        
-        // Ensure prompt is visible by removing hidden class AND checking opacity/transform
-        pwaBanner.classList.remove('hidden');
-        pwaBanner.style.transform = "translateY(0)"; 
-        
-        if (isIOS) {
-            pwaText.textContent = "Instalar no iPhone";
-            pwaDesc.innerHTML = "Toque em <i class='fas fa-share-square'></i> e depois em <strong>Adicionar à Tela de Início</strong>.";
-            installBtn.style.display = 'none';
-        } else {
-            pwaText.textContent = "Instalar ABFIT";
-            pwaDesc.textContent = "Acesse offline e mais rápido.";
-            installBtn.style.display = 'block';
-        }
-    };
-
-    // Attempt to show banner very quickly after load
-    setTimeout(showInstallBanner, 500);
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        showInstallBanner();
-    });
-
-    installBtn?.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response: ${outcome}`);
-            deferredPrompt = null;
-            pwaBanner.classList.add('hidden');
-        } else {
-            alert("Para instalar, procure a opção 'Instalar App' ou 'Adicionar à Tela Inicial' no menu do seu navegador.");
-        }
-    });
-
-    document.getElementById('pwa-close-btn')?.addEventListener('click', () => {
-        pwaBanner.classList.add('hidden');
-    });
-
-    // Init icons
-    if (typeof feather !== 'undefined') feather.replace();
-});
-
 // Exports for global usage
 window.loadTrainingScreen = loadTrainingScreen;
 window.showScreen = showScreen;
@@ -1103,3 +981,128 @@ window.loadStudentProfile = loadStudentProfile;
 window.openFinishWorkoutModal = openFinishWorkoutModal;
 window.handlePhotoSelect = handlePhotoSelect;
 window.saveFinishedWorkout = saveFinishedWorkout;
+
+// --- BOOTSTRAP (INITIALIZATION) ---
+// Note: We do NOT use DOMContentLoaded here because modules are deferred by default,
+// meaning the DOM is ready when this code runs. Waiting for DCL inside a module
+// that loads late might cause the listener to never fire.
+
+// 1. Initial Data Setup
+initializeDatabase();
+
+// 2. Service Worker Registration
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('SW registered'))
+            .catch(err => console.log('SW failed', err));
+    });
+}
+
+// 3. User Session Check
+const user = getCurrentUser();
+
+// 4. Initial Screen Load
+if (user) {
+    const db = getDatabase();
+    if (db.users.find((u) => u.email.toLowerCase() === user.toLowerCase())) {
+        loadStudentProfile(user);
+    } else {
+        localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+        showScreen('loginScreen');
+    }
+} else {
+    showScreen('loginScreen');
+}
+
+// 5. Flag App as Loaded (for fallback script in HTML)
+window.isAppLoaded = true;
+const appContainer = document.getElementById('appContainer');
+if (appContainer) appContainer.style.opacity = '1';
+
+// 6. Login Form Logic
+// We attach this immediately as the DOM elements are available.
+document.getElementById('login-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value.trim().toLowerCase();
+    if (getDatabase().users.find(u => u.email === email)) { 
+        setCurrentUser(email); 
+        loadStudentProfile(email); 
+    } else {
+        const err = document.getElementById('login-error');
+        if(err) err.textContent = "E-mail não encontrado.";
+    }
+});
+
+// 7. Global Event Listeners
+document.getElementById('logout-btn')?.addEventListener('click', () => { localStorage.removeItem(STORAGE_KEYS.CURRENT_USER); location.reload(); });
+document.getElementById('prev-month-btn')?.addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1); renderCalendar(currentCalendarDate); });
+document.getElementById('next-month-btn')?.addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1); renderCalendar(currentCalendarDate); });
+
+// Handle Outdoor Activity Buttons
+document.querySelectorAll('.outdoor-activity-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        currentActivityType = btn.dataset.activity;
+        document.getElementById('tracking-activity-title').textContent = currentActivityType;
+        showScreen('outdoorTrackingScreen');
+        if(typeof window.initMap === 'function') window.initMap(); 
+    });
+});
+
+document.querySelector('.outdoor-back-btn')?.addEventListener('click', () => showScreen('outdoorSelectionScreen'));
+
+// --- PWA INSTALL LOGIC (Enhanced for immediate display) ---
+const pwaBanner = document.getElementById('pwa-install-banner');
+const installBtn = document.getElementById('pwa-install-btn');
+const pwaText = pwaBanner.querySelector('h4');
+const pwaDesc = pwaBanner.querySelector('p');
+let deferredPrompt;
+
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator.standalone === true);
+
+const showInstallBanner = () => {
+    if (isStandalone) return; 
+    
+    // Ensure prompt is visible by removing hidden class AND checking opacity/transform
+    pwaBanner.classList.remove('hidden');
+    pwaBanner.style.transform = "translateY(0)"; 
+    
+    if (isIOS) {
+        pwaText.textContent = "Instalar no iPhone";
+        pwaDesc.innerHTML = "Toque em <i class='fas fa-share-square'></i> e depois em <strong>Adicionar à Tela de Início</strong>.";
+        installBtn.style.display = 'none';
+    } else {
+        pwaText.textContent = "Instalar ABFIT";
+        pwaDesc.textContent = "Acesse offline e mais rápido.";
+        installBtn.style.display = 'block';
+    }
+};
+
+// Attempt to show banner very quickly after load
+setTimeout(showInstallBanner, 500);
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    showInstallBanner();
+});
+
+installBtn?.addEventListener('click', async () => {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response: ${outcome}`);
+        deferredPrompt = null;
+        pwaBanner.classList.add('hidden');
+    } else {
+        alert("Para instalar, procure a opção 'Instalar App' ou 'Adicionar à Tela Inicial' no menu do seu navegador.");
+    }
+});
+
+document.getElementById('pwa-close-btn')?.addEventListener('click', () => {
+    pwaBanner.classList.add('hidden');
+});
+
+// Init icons
+if (typeof feather !== 'undefined') feather.replace();
